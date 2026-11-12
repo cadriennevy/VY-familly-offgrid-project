@@ -469,4 +469,1348 @@
               <option value="Molo Medical & Cold-Chain Cabinet">Molo Medical &amp; Cold-Chain Cabinet</option>
               <option value="Molo Master Grab-Bag">Molo Master Grab-Bag</option>
               <option value="Molo Sanitation / Utility Closet">Molo Sanitation / Utility Closet</option>
-              <option value="Guimaras
+              <option value="Guimaras Transit Bag (Buenavista)">Guimaras Transit Bag (Buenavista)</option>
+              <option value="Jaro Transit Bag (Alta Tierra)">Jaro Transit Bag (Alta Tierra)</option>
+            </select>
+          </label>
+          <label>Current Stock on Hand:
+            <input type="number" id="invQty" min="0" step="1" value="0">
+          </label>
+          <label>7-Day Target Stock (10 People + Zoe):
+            <input type="number" id="invTarget" min="1" step="1" value="10">
+          </label>
+          <label>Unit Price (PHP ₱):
+            <input type="number" id="invPrice" min="0" step="0.01" value="0">
+          </label>
+          <label>Price Source Classification:
+            <select id="invPriceSource">
+              <option value="DTI SRP Bulletin">DTI SRP Bulletin (BNPC Regulated)</option>
+              <option value="Estimate, verify at store">Estimate, verify at store (Outside DTI Scope)</option>
+              <option value="Estimate, verify at pharmacy">Estimate, verify at pharmacy (Outside DTI Scope)</option>
+            </select>
+          </label>
+          <label>Expiry Date (or leave blank if N/A):
+            <input type="date" id="invExpiry">
+          </label>
+          <label>Verification Status:
+            <select id="invStatus">
+              <option value="Needs Verification">Needs Verification (Unconfirmed)</option>
+              <option value="Estimated">Estimated Count</option>
+              <option value="Confirmed">Confirmed (Physically Counted)</option>
+              <option value="Damaged / Replace">Damaged / Replace</option>
+            </select>
+          </label>
+          <label>Autonomy Pillar Contributed To:
+            <select id="invPillar">
+              <option value="NONE">General Readiness (No Day Multiplier)</option>
+              <option value="WATER">Drinking Water Days (Target 7d)</option>
+              <option value="UTILITY_WATER">Utility &amp; Sanitation Water Days (Target 7d)</option>
+              <option value="FOOD">Pantry &amp; Toddler Food Days (Target 7d)</option>
+              <option value="SANITATION">Off-Grid Sanitation Days (Target 7d)</option>
+              <option value="COLD_CHAIN">Jules Insulin Cold-Chain Hours (Target 72h)</option>
+            </select>
+          </label>
+          <label>Days (or Hours) Provided per 1 Unit:
+            <input type="number" id="invUnitDays" min="0" step="0.05" value="0" placeholder="e.g., 0.45 days per 5-gal jug">
+          </label>
+        </div>
+        <label style="display:block; margin-top:0.5rem;">Official Store Channel / Notes:
+          <input type="text" id="invStoreNote" placeholder="e.g., Wilcon Depot Jaro / Mercury Drug / SM Supermarket Iloilo">
+        </label>
+        <div style="margin-top:0.75rem; display:flex; gap:0.5rem;">
+          <button class="btn-primary" onclick="saveInventoryItem()">💾 Save Item</button>
+          <button onclick="closeInventoryModal()">Cancel</button>
+        </div>
+      </div>
+
+      <div id="inventoryContainer"></div>
+
+      <div class="card">
+        <h3 style="margin-top:0;">Prioritized Replenishment &amp; Shopping List (P1 Life/Medical → P2 Water/Food/Sanitation → P3 Hardware)</h3>
+        <p style="font-size:0.95rem;">Automatically calculates shortfalls (<code>Target - Current Stock</code>) plus expired/damaged items, plus any member medications/candy marked Low or Needs Verification.</p>
+        <div id="replenishmentSummary"></div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0;">Official Iloilo &amp; Online Store Reference (Avoid Unverified Sellers)</h3>
+        <ul style="margin:0;">
+          <li><strong>DTI Official Price Guide Reference (BNPC):</strong> <a href="https://www.dti.gov.ph/konsyumer/e-presyo/" target="_blank" rel="noopener">DTI e-Presyo / SRP Bulletins Portal</a></li>
+          <li><strong>Food-Grade Water Drums, Camp Stoves, Commode Buckets &amp; Emergency Lights:</strong> <a href="https://shop.wilcon.com.ph" target="_blank" rel="noopener">Wilcon Depot Official (Jaro/Iloilo)</a> | <a href="https://www.acehardware.ph" target="_blank" rel="noopener">ACE Hardware Official</a> | CitiHardware Iloilo.</li>
+          <li><strong>Pharmacies &amp; Medical Devices (Insulin Coolers, Strips, Metformin, ORS):</strong> <a href="https://www.mercurydrug.com" target="_blank" rel="noopener">Mercury Drug Official</a> | <a href="https://www.watsons.com.ph" target="_blank" rel="noopener">Watsons Official</a>.</li>
+          <li><strong>Pet Supplies (Zoe):</strong> Pet Express SM City Iloilo / Official Brand Flagship Stores.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- TAB 3: MONTHLY AUDIT & REPORT -->
+    <section id="tab-monthly" class="tab-panel" role="tabpanel">
+      <div class="card">
+        <h2 style="margin-top:0;">3. Monthly Verification Checklist &amp; Audit Report Generator</h2>
+        <p>Complete these 7 verification checks each month, then click <strong>Run &amp; Refresh Monthly Report Now</strong>. The report states clearly what was self-recorded and never claims automated physical inspection.</p>
+        <div id="monthlyChecklistContainer" style="display:grid; gap:0.6rem; margin-bottom:1rem;"></div>
+        <button class="btn-primary" onclick="generateMonthlyReport()">📊 Run &amp; Refresh Monthly Report Now</button>
+      </div>
+
+      <div class="card" id="monthlyReportOutput"></div>
+    </section>
+
+    <!-- TAB 4: MEMBER PREP & DYNAMIC MEDS -->
+    <section id="tab-members" class="tab-panel" role="tabpanel">
+      <div class="card">
+        <h2 style="margin-top:0;">4. Household Member Prep Lists &amp; Editable Medication / Candy Tracker (10 People + Zoe)</h2>
+        <p>
+          <strong>Dynamic Medications:</strong> Every member has a <strong><code>+ Add Medication / Item</code></strong> button and <strong><code>Edit</code></strong> / <strong><code>Remove</code></strong> controls (Admin mode). In Helper mode, helpers can view all instructions and storage rules safely without deleting entries.
+        </p>
+      </div>
+      <div id="memberCardsContainer" class="grid-2"></div>
+    </section>
+
+    <!-- TAB 5: EVACUATION & CONTACTS -->
+    <section id="tab-evac" class="tab-panel" role="tabpanel">
+      <div class="card">
+        <h2 style="margin-top:0;">5. Consolidated Molo Home Base Evacuation Plan, Grab-Bags &amp; Responder Sheet</h2>
+        <p><strong>Consolidation Rule:</strong> In an impending typhoon, severe El Niño outage, or emergency, <strong>Daddy Grampy (Jaro)</strong> and <strong>Mommy Den &amp; Daddy Danny (Guimaras)</strong> consolidate early to <strong>Zone 4, Brgy. South Fundidor, Molo</strong>.</p>
+      </div>
+
+      <div class="grid-3" id="grabBagsContainer"></div>
+
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+          <h3 style="margin:0;">Fillable Emergency Contacts &amp; Local Hotlines</h3>
+          <button class="btn-primary no-print admin-only" onclick="addEmergencyContact()">➕ Add Contact</button>
+        </div>
+        <div class="table-wrap">
+          <table id="contactsTable">
+            <thead>
+              <tr>
+                <th>Agency / Person</th>
+                <th>Location / Role</th>
+                <th>Phone / Hotline (Editable in Admin Mode)</th>
+                <th class="no-print admin-only">Action</th>
+              </tr>
+            </thead>
+            <tbody id="contactsTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0;">Printable First-Responder Medical Summary Card (All 10 Members + Zoe)</h3>
+        <p style="font-size:0.95rem;">Medications/Candy automatically sync from Tab 4. Responder notes can be updated in Admin mode.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Member (Age &amp; Usual Location)</th>
+                <th>Key Conditions &amp; Accessibility Needs</th>
+                <th>Current Recorded Medications / Candy (Synced)</th>
+                <th>Responder Notes / Clinician / Blood Type</th>
+              </tr>
+            </thead>
+            <tbody id="responderTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = 'MOLO_FAMILY_HUB_V2_1';
+
+    const LOCATIONS = [
+      { id: 'MOLO', name: 'Molo Home Base (Zone 4, Brgy. South Fundidor)', lat: 10.6969, lon: 122.5435, elec: 'MORE Power Iloilo' },
+      { id: 'JARO', name: 'Jaro (Alta Tierra Village — Daddy Grampy)', lat: 10.7460, lon: 122.5620, elec: 'MORE Power Iloilo' },
+      { id: 'GUIMARAS', name: 'Guimaras (Brgy. Pina, Buenavista — Mommy Den & Daddy Danny)', lat: 10.6885, lon: 122.6480, elec: 'GUIMELCO' }
+    ];
+
+    const STARTER_WAVES = [
+      {
+        wave: 'Wave 1: This Week (Immediate Life & Medical Run)',
+        store: 'Mercury Drug / Watsons + Molo Water Refilling Station',
+        items: [
+          { id: 'sw1_1', label: '14–30 day prescription buffer: Jules insulin, Daddy Grampy daily candy + BP/kidney meds, Mommy Den Metformin, Daddy Danny prostate meds' },
+          { id: 'sw1_2', label: 'Jules brownout insulin cold-chain: 2 insulated medical coolers + 4–6 gel ice packs + min-max thermometer + barrier cloth (never freeze)' },
+          { id: 'sw1_3', label: '30–40 packets Oral Rehydration Salts (ORS) for Eli (17m former preemie), kids & seniors + glucometer strips + AA batteries for BP cuff' },
+          { id: 'sw1_4', label: '6–8 sealed 5-gallon (18.9L) drinking water jugs (plus separate clinician-guided reserve for Daddy Grampy) + 2 cases 1L bottled water' },
+          { id: 'sw1_5', label: 'Mommy Den tactile labeling kit: thick rubber bands & raised bump dots on her Metformin bottle (brief Mica & Mau on tactile code)' }
+        ]
+      },
+      {
+        wave: 'Wave 2: Next Payday (Pantry, Baby & Pet Grocery Run)',
+        store: 'Iloilo Supermart / SM Supermarket + Pet Express SM City Iloilo',
+        items: [
+          { id: 'sw2_1', label: '28–42 easy-open cans sardines/mackerel + 20–28 easy-open cans corned beef/meat loaf (verify latest DTI SRP bulletin at aisle)' },
+          { id: 'sw2_2', label: '30–40 packs instant mami/cup noodles + 3–4 packs SkyFlakes/Fita biscuits (quick carbs for Jules hypoglycemia) + 10–15 bars DTI soap' },
+          { id: 'sw2_3', label: 'Eli (17m former preemie) 7-day reserve: toddler milk formula, ready-to-eat baby pouches, 1 jumbo diaper pack & 4–6 unscented wipes' },
+          { id: 'sw2_4', label: 'Zoe (23m Shih Poo) at Pet Express: 1 sealed 3–4kg dog food bag + 3–4 wet cans + cooling mat + hard ventilated pet carrier' },
+          { id: 'sw2_5', label: 'Pre-position Guimaras Transit Kit: leave spare tactile-marked Metformin bottle + laminated ID card with Daddy Danny & Mommy Den' }
+        ]
+      },
+      {
+        wave: 'Wave 3: Hardware & Off-Grid Storage Run',
+        store: 'Wilcon Depot Jaro / ACE Hardware / CitiHardware Iloilo',
+        items: [
+          { id: 'sw3_1', label: '2–4 food-grade blue polyethylene water drums (150L–200L with tight lids & faucets) for toilet flushing & sponge baths' },
+          { id: 'sw3_2', label: '2 heavy-duty plastic pails (balde) + dedicated tabo dippers + 1 roll XXL heavy-duty garbage bags (emergency bucket-toilet liners)' },
+          { id: 'sw3_3', label: '2–3 rechargeable LED emergency lanterns & clip fans (prioritize airflow for Eli, Zoe, Mommy Den & Daddy Danny during brownouts)' },
+          { id: 'sw3_4', label: '2× 20,000mAh power banks (1 for Molo Home Base, 1 sent to Guimaras so Mommy Den & Daddy Danny stay reachable during ferry transit)' },
+          { id: 'sw3_5', label: '1 portable butane camp stove + 4–6 sealed butane canisters (for boiling water/noodles outdoors or in a ventilated area)' }
+        ]
+      }
+    ];
+
+    const HAZARD_SCENARIOS = {
+      HEAT: {
+        title: '☀️ Extreme Heat / El Niño Action Protocol (Heat Index ≥ 42°C Danger / Extreme Danger)',
+        tasks: [
+          { id: 'hz_h1', who: 'Mica & Mau (Molo)', text: 'ELI (17m Former Preemie) & KIDS: Check Eli every 2–3 hrs for wet diapers (flag if <4–6/day), sunken eyes/fontanelle, or lethargy. Run rechargeable fans in shaded ground-floor room; dress Eli, Addy (8), and Drei (5) in single-layer cotton.' },
+          { id: 'hz_h2', who: 'Me & Daddy Grampy (Jaro/Molo)', text: 'DADDY GRAMPY (53): Follow his clinician’s specific kidney-care and hydration instructions strictly (never use generic fluid formulas). Verify BP monitor and cool indoor rest.' },
+          { id: 'hz_h3', who: 'Jules & Me (Molo)', text: 'JULES INSULIN COLD-CHAIN: Check fridge/cooler thermometer so ambient heat never warms insulin above its manufacturer package insert threshold.' },
+          { id: 'hz_h4', who: 'Daddy Danny & Mommy Den (Guimaras/Molo)', text: 'SENIORS (63 & 64): Enforce shaded indoor rest between 10 AM – 4 PM. Keep Mommy Den’s tactile-labeled water bottle and Metformin within direct reach.' },
+          { id: 'hz_h5', who: 'Mau (Molo)', text: 'ZOE (23m Shih Poo): Place Zoe on cooling mat/cool tile with dedicated water bowl and fan. Watch for heavy raspy panting or bright red gums; NEVER walk on hot pavement.' }
+        ]
+      },
+      BROWNOUT: {
+        title: '🔌 Extended MORE Power / GUIMELCO Outage Protocol (> 4 Hours)',
+        tasks: [
+          { id: 'hz_b1', who: 'Jules & Me (Molo)', text: 'INSULIN COLD-CHAIN: Keep refrigerator door closed. If outage exceeds safe hold time, transfer Jules’s unopened insulin to insulated medical cooler with gel packs and a barrier cloth (ensure insulin NEVER touches ice or freezes; verify outage plan with pharmacist).' },
+          { id: 'hz_b2', who: 'Mica & Mau (Molo)', text: 'LIGHTING & FIRE SAFETY: Switch on rechargeable LED lanterns and headlamps. NEVER place lit candles near Mommy Den’s walking path, Eli/Addy/Drei, or Zoe.' },
+          { id: 'hz_b3', who: 'Me (Molo)', text: 'POWER PRIORITIZATION: Reserve Portable Power Station & 20,000mAh power banks strictly for Eli/Senior cooling fans, medical devices, and emergency phones.' },
+          { id: 'hz_b4', who: 'All Household', text: 'WATER & SANITATION: Conserve pressure-dependent tap water; switch toilet flushing to bucket flush using Category 02 Utility Water drums.' }
+        ]
+      },
+      TYPHOON: {
+        title: '🌀 Typhoon / Guimaras Pre-Storm Consolidation Protocol (Before TCWS Signal No. 1)',
+        tasks: [
+          { id: 'hz_t1', who: 'Me & Daddy Danny (URGENT)', text: 'GUIMARAS FERRY CUTOFF TRIGGER: Move Mommy Den (63, blind) and Daddy Danny (64) from Brgy. Pina, Buenavista across the Iloilo Strait to Molo Home Base BEFORE Coast Guard suspends Jordan/Buenavista boats.' },
+          { id: 'hz_t2', who: 'Me & Daddy Grampy', text: 'JARO CONSOLIDATION: Pick up Daddy Grampy (53) from Alta Tierra, Jaro with his 14–30 day daily candy, hypertension, and kidney supplies + written clinician instructions.' },
+          { id: 'hz_t3', who: 'Mica & Mau (Molo)', text: 'WATER & FLOOD PREP: Top up all 4 utility water drums (600L–800L) and verify 12 sealed 5-gallon drinking jugs. Elevate power stations, food crates, and Mommy Den’s tactile med kit above flood level.' },
+          { id: 'hz_t4', who: 'Jules & Me (Molo)', text: 'STAGE MASTER GRAB-BAGS: Place Molo Master Grab-Bags, Jules’s evaporative/insulated insulin cooler, Eli’s preemie bag, and Zoe’s hard pet carrier right by the main exit.' }
+        ]
+      },
+      QUAKE: {
+        title: '🫨 Earthquake & Tsunami Immediate Response Checklist',
+        tasks: [
+          { id: 'hz_q1', who: 'All Adults & Helpers', text: 'DURING SHAKING (DROP, COVER, HOLD ON): Mica/Mau immediately shield Eli (17m), Addy (8), and Drei (5) under sturdy tables away from glass and heavy cabinets.' },
+          { id: 'hz_q2', who: 'Designated Sighted Guide', text: 'MOMMY DEN ACCESSIBILITY: Assigned sighted guide (Daddy Danny in Guimaras; Me/Mica/Mau in Molo) immediately makes physical/verbal contact with Mommy Den, places her spare white cane in hand, and guides her clear of floor debris.' },
+          { id: 'hz_q3', who: 'Me & Jules', text: 'UTILITY & TSUNAMI CHECK: Shut off butane/LPG gas valves and main breaker if lines are damaged. Check PHIVOLCS / Iloilo CDRRMO for tsunami advisories (especially for coastal Molo and Buenavista); evacuate to high ground with grab-bags and Zoe in carrier if ordered.' }
+        ]
+      }
+    };
+
+    const DEFAULT_STATE = {
+      locationFilter: 'ALL',
+      roleMode: 'ADMIN',
+      activeHazard: 'HEAT',
+      hazardChecks: {},
+      starterChecks: {},
+      highContrast: false,
+      largeText: false,
+      dtiLastUpdated: '',
+      bulletinLog: {
+        weatherAlert: 'Needs Verification — Check PAGASA & Iloilo CDRRMO',
+        morePower: 'Needs Verification — Check MORE Power advisory page',
+        guimelco: 'Needs Verification — Check GUIMELCO & PCG Ferry status',
+        lastSaved: 'Never'
+      },
+      monthlyChecks: [
+        { id: 'chk1', label: '1. Actual physical quantities counted & reconciled against hub records across all 9 categories (Molo Home Base)', checked: false, lastDate: 'Needs Verification' },
+        { id: 'chk2', label: '2. Pantry food, Eli toddler milk/pouches, and ORS expiry dates inspected', checked: false, lastDate: 'Needs Verification' },
+        { id: 'chk3', label: '3. All member medication & candy stocks & expiry dates verified with each person/clinician (14–30 day target)', checked: false, lastDate: 'Needs Verification' },
+        { id: 'chk4', label: '4. Jules insulin cold-chain verified (fridge thermometer, gel packs, barrier cloth & evaporative pouch readiness)', checked: false, lastDate: 'Needs Verification' },
+        { id: 'chk5', label: '5. Power stations, 20,000mAh power banks, rechargeable fans, headlamps, and weather radios charged to 100%', checked: false, lastDate: 'Needs Verification' },
+        { id: 'chk6', label: '6. Drinking water jugs & 150L–200L utility water drums inspected for seal, cleanliness, and chlorine rotation', checked: false, lastDate: 'Needs Verification' },
+        { id: 'chk7', label: '7. Mommy Den tactile medication labels (rubber bands/bump dots) & Zoe pet evacuation carrier inspected', checked: false, lastDate: 'Needs Verification' }
+      ],
+      inventory: [
+        { id: 'inv01', category: '01. Drinking Water & Hydration', name: 'Sealed Drinking Water (5-Gallon / 18.9L Jugs — plus separate clinician-guided reserve for Daddy Grampy)', priority: 'P1 - Life & Medical', zone: 'Molo Water Station', qty: 0, target: 12, price: 50, priceSource: 'Estimate, verify at store', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'WATER', unitDays: 0.45, storeNote: 'Accredited Water Refilling Station / Supermarket (Verify DTI Bottled Water SRP)' },
+        { id: 'inv02', category: '01. Drinking Water & Hydration', name: 'Grab-Bag Bottled Purified Water (1-Liter Bottles)', priority: 'P1 - Life & Medical', zone: 'Molo Master Grab-Bag', qty: 0, target: 36, price: 21.50, priceSource: 'DTI SRP Bulletin', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'WATER', unitDays: 0.045, storeNote: 'DTI BNPC Regulated — Verify latest DTI SRP bulletin at Iloilo supermarket' },
+        { id: 'inv03', category: '01. Drinking Water & Hydration', name: 'Oral Rehydration Salts (ORS Packets — Pediatric & Adult for Eli, Kids & Seniors)', priority: 'P1 - Life & Medical', zone: 'Molo Medical & Cold-Chain Cabinet', qty: 0, target: 40, price: 18, priceSource: 'Estimate, verify at pharmacy', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'NONE', unitDays: 0, storeNote: 'Mercury Drug / Watsons Official Pharmacy' },
+        { id: 'inv04', category: '01. Drinking Water & Hydration', name: 'Water Purification Chlorine Tablets (Aquatabs, Box of 50)', priority: 'P1 - Life & Medical', zone: 'Molo Water Station', qty: 0, target: 2, price: 250, priceSource: 'Estimate, verify at pharmacy', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'NONE', unitDays: 0, storeNote: 'Mercury Drug / Watsons Official Store' },
+        { id: 'inv05', category: '02. Utility Water & Storage Hardware', name: 'Food-Grade Polyethylene Water Storage Drum/Tank (150L–200L with Tight Lid & Spigot)', priority: 'P3 - Off-Grid Hardware & Gear', zone: 'Molo Water Station', qty: 0, target: 4, price: 1850, priceSource: 'Estimate, verify at store', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'UTILITY_WATER', unitDays: 1.75, storeNote: 'Wilcon Depot Jaro / ACE Hardware / CitiHardware Iloilo' },
+        { id: 'inv06', category: '02. Utility Water & Storage Hardware', name: 'Dedicated Water Dippers (Tabo), Covered Buckets & Food-Grade Transfer Hose Set', priority: 'P2 - Water, Food & Sanitation', zone: 'Molo Water Station', qty: 0, target: 3, price: 280, priceSource: 'Estimate, verify at store', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'NONE', unitDays: 0, storeNote: 'Wilcon Depot / ACE Hardware' },
+        { id: 'inv07', category: '02. Utility Water & Storage Hardware', name: 'Unscented Household Bleach (5.25%–6% Sodium Hypochlorite, 1L — Water & Surface Disinfection)', priority: 'P2 - Water, Food & Sanitation', zone: 'Molo Sanitation / Utility Closet', qty: 0, target: 3, price: 65, priceSource: 'Estimate, verify at store', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'NONE', unitDays: 0, storeNote: 'SM Supermarket / Robinsons Iloilo' },
+        { id: 'inv08', category: '03. Off-Grid Sanitation & Waste', name: 'Heavy-Duty XXL Garbage & Bucket-Toilet Liner Bags (Roll/Pack of 10)', priority: 'P2 - Water, Food & Sanitation', zone: 'Molo Sanitation / Utility Closet', qty: 0, target: 8, price: 95, priceSource: 'Estimate, verify at store', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'SANITATION', unitDays: 0.5, storeNote: 'Supermarket / Wilcon Depot' },
+        { id: 'inv09', category: '03. Off-Grid Sanitation & Waste', name: 'Collapsible Emergency Commode / Heavy-Duty Toilet Bucket with Lid (Senior Accessible)', priority: 'P2 - Water, Food & Sanitation', zone: 'Molo Sanitation / Utility Closet', qty: 0, target: 2, price: 950, priceSource: 'Estimate, verify at store', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'SANITATION', unitDays: 0.5, storeNote: 'Medical Supply Store / Wilcon Depot' },
+        { id: 'inv10', category: '03. Off-Grid Sanitation & Waste', name: 'Adult Hygiene Wet Wipes / Waterless Bathing Cloths (80-Sheet Packs)', priority: 'P2 - Water, Food & Sanitation', zone: 'Molo Sanitation / Utility Closet', qty: 0, target: 10, price: 120, priceSource: 'Estimate, verify at store', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'SANITATION', unitDays: 0.2, storeNote: 'Watsons / Mercury Drug / Supermarket' },
+        { id: 'inv11', category: '03. Off-Grid Sanitation & Waste', name: 'Bath Soap & Laundry Detergent Bars (BNPC Basic Regulated)', priority: 'P2 - Water, Food & Sanitation', zone: 'Molo Sanitation / Utility Closet', qty: 0, target: 20, price: 28, priceSource: 'DTI SRP Bulletin', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'NONE', unitDays: 0, storeNote: 'DTI BNPC Reference — Verify current SRP bulletin' },
+        { id: 'inv12', category: '03. Off-Grid Sanitation & Waste', name: '70% Isopropyl / Ethyl Alcohol (1-Liter Bottle)', priority: 'P1 - Life & Medical', zone: 'Molo Medical & Cold-Chain Cabinet', qty: 0, target: 6, price: 145, priceSource: 'Estimate, verify at pharmacy', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'NONE', unitDays: 0, storeNote: 'Mercury Drug / Watsons Official' },
+        { id: 'inv13', category: '04. Pantry, Toddler (Eli) & Ready-to-Eat Food', name: 'Canned Sardines / Mackerel in Tomato Sauce (155g Easy-Open Can)', priority: 'P2 - Water, Food & Sanitation', zone: 'Molo Pantry', qty: 0, target: 42, price: 21, priceSource: 'DTI SRP Bulletin', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'FOOD', unitDays: 0.05, storeNote: 'DTI BNPC Regulated — Verify latest DTI bulletin' },
+        { id: 'inv14', category: '04. Pantry, Toddler (Eli) & Ready-to-Eat Food', name: 'Canned Corned Beef / Meat Loaf (150g–175g Easy-Open Can)', priority: 'P2 - Water, Food & Sanitation', zone: 'Molo Pantry', qty: 0, target: 28, price: 42, priceSource: 'DTI SRP Bulletin', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'FOOD', unitDays: 0.05, storeNote: 'DTI BNPC Regulated — Verify latest DTI bulletin' },
+        { id: 'inv15', category: '04. Pantry, Toddler (Eli) & Ready-to-Eat Food', name: 'Instant Mami Noodles (55g Pack)', priority: 'P2 - Water, Food & Sanitation', zone: 'Molo Pantry', qty: 0, target: 42, price: 8.75, priceSource: 'DTI SRP Bulletin', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'FOOD', unitDays: 0.04, storeNote: 'DTI BNPC Regulated — Verify latest DTI bulletin' },
+        { id: 'inv16', category: '04. Pantry, Toddler (Eli) & Ready-to-Eat Food', name: 'Ready-to-Eat Crackers / Biscuits / Retort Rice Packs (No-Cook & Jules Low-Sugar Backup)', priority: 'P2 - Water, Food & Sanitation', zone: 'Molo Pantry', qty: 0, target: 14, price: 65, priceSource: 'Estimate, verify at store', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'FOOD', unitDays: 0.05, storeNote: 'Supermarket Iloilo' },
+        { id: 'inv17', category: '04. Pantry, Toddler (Eli) & Ready-to-Eat Food', name: 'Eli (17m Former Preemie) Toddler Milk Formula & Ready-to-Eat Food Packs (7-Day Supply)', priority: 'P1 - Life & Medical', zone: 'Molo Pantry', qty: 0, target: 6, price: 480, priceSource: 'Estimate, verify at pharmacy', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'FOOD', unitDays: 0.2, storeNote: 'Mercury Drug / SM Supermarket (Check specific brand)' },
+        { id: 'inv18', category: '04. Pantry, Toddler (Eli) & Ready-to-Eat Food', name: 'Eli Toddler Diapers (Packs) & Unscented Baby Wipes', priority: 'P1 - Life & Medical', zone: 'Molo Master Grab-Bag', qty: 0, target: 6, price: 340, priceSource: 'Estimate, verify at store', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'NONE', unitDays: 0, storeNote: 'Official Mall Flagship / Supermarket' },
+        { id: 'inv19', category: '04. Pantry, Toddler (Eli) & Ready-to-Eat Food', name: '3-in-1 Coffee / Powdered Milk Pack (BNPC Regulated)', priority: 'P2 - Water, Food & Sanitation', zone: 'Molo Pantry', qty: 0, target: 6, price: 110, priceSource: 'DTI SRP Bulletin', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'NONE', unitDays: 0, storeNote: 'DTI BNPC Regulated — Verify latest DTI bulletin' },
+        { id: 'inv20', category: '05. Medications, Candy & Clinical Consumables', name: 'Glucometer Test Strips (Box of 50), Lancets & Swabs (Jules & Mommy Den)', priority: 'P1 - Life & Medical', zone: 'Molo Medical & Cold-Chain Cabinet', qty: 0, target: 4, price: 950, priceSource: 'Estimate, verify at pharmacy', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'NONE', unitDays: 0, storeNote: 'Mercury Drug / Watsons Official Pharmacy' },
+        { id: 'inv21', category: '05. Medications, Candy & Clinical Consumables', name: 'Digital Blood Pressure Monitor + 12 Extra AA Batteries (Daddy Grampy & Seniors)', priority: 'P1 - Life & Medical', zone: 'Molo Medical & Cold-Chain Cabinet', qty: 0, target: 2, price: 1650, priceSource: 'Estimate, verify at pharmacy', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'NONE', unitDays: 0, storeNote: 'Omron Official / Mercury Drug' },
+        { id: 'inv22', category: '05. Medications, Candy & Clinical Consumables', name: 'Comprehensive First-Aid Kit (Sterile Gauze, Povidone-Iodine, Thermometer, Pediatric Meds)', priority: 'P1 - Life & Medical', zone: 'Molo Master Grab-Bag', qty: 0, target: 2, price: 850, priceSource: 'Estimate, verify at pharmacy', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'NONE', unitDays: 0, storeNote: 'Mercury Drug / Watsons' },
+        { id: 'inv23', category: '06. Insulin Cold-Chain & Off-Grid Power', name: 'Insulated Medical Cooler + 6 Gel Packs + Barrier Cloths (Jules Insulin — Never Freeze)', priority: 'P1 - Life & Medical', zone: 'Molo Kitchen / Fridge', qty: 0, target: 2, price: 1250, priceSource: 'Estimate, verify at store', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'COLD_CHAIN', unitDays: 24, storeNote: 'Verify storage duration with pharmacist; barrier cloth prevents freezing' },
+        { id: 'inv24', category: '06. Insulin Cold-Chain & Off-Grid Power', name: 'Evaporative Insulin Cooling Wallet (Water-Activated Transit Pouch for Jules)', priority: 'P1 - Life & Medical', zone: 'Molo Master Grab-Bag', qty: 0, target: 2, price: 1400, priceSource: 'Estimate, verify at pharmacy', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'COLD_CHAIN', unitDays: 12, storeNote: 'Confirm room-temp labeled limits with pharmacist' },
+        { id: 'inv25', category: '06. Insulin Cold-Chain & Off-Grid Power', name: 'Digital Fridge/Cooler Min-Max Thermometer (Insulin Storage Monitor)', priority: 'P1 - Life & Medical', zone: 'Molo Kitchen / Fridge', qty: 0, target: 2, price: 320, priceSource: 'Estimate, verify at store', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'NONE', unitDays: 0, storeNote: 'Medical / Kitchen Supply Store' },
+        { id: 'inv26', category: '06. Insulin Cold-Chain & Off-Grid Power', name: 'Portable Power Station (LiFePO4 300Wh–500Wh+) & Solar Panel (Fans & Medical Backup)', priority: 'P3 - Off-Grid Hardware & Gear', zone: 'Molo Master Grab-Bag', qty: 0, target: 1, price: 14500, priceSource: 'Estimate, verify at store', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'NONE', unitDays: 0, storeNote: 'Official EcoFlow / Bluetti / Anker Flagship or Wilcon/ACE' },
+        { id: 'inv27', category: '06. Insulin Cold-Chain & Off-Grid Power', name: '20,000mAh Power Banks (Molo, Jaro & Guimaras Transit Bags)', priority: 'P2 - Water, Food & Sanitation', zone: 'Molo Master Grab-Bag', qty: 0, target: 4, price: 1100, priceSource: 'Estimate, verify at store', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'NONE', unitDays: 0, storeNote: 'Official Anker / Romoss / Baseus Mall Store' },
+        { id: 'inv28', category: '06. Insulin Cold-Chain & Off-Grid Power', name: 'Portable Butane Stove + 8 Sealed Butane Canisters (Outdoor Ventilated Use Only)', priority: 'P2 - Water, Food & Sanitation', zone: 'Molo Kitchen / Fridge', qty: 0, target: 1, price: 1350, priceSource: 'Estimate, verify at store', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'NONE', unitDays: 0, storeNote: 'ACE Hardware / Wilcon Depot' },
+        { id: 'inv29', category: '07. Lighting & Off-Grid Communications', name: 'Rechargeable LED Emergency Lanterns & Hands-Free Headlamps', priority: 'P2 - Water, Food & Sanitation', zone: 'Molo Master Grab-Bag', qty: 0, target: 6, price: 550, priceSource: 'Estimate, verify at store', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'NONE', unitDays: 0, storeNote: 'ACE Hardware / Wilcon / Official Firefly Store' },
+        { id: 'inv30', category: '07. Lighting & Off-Grid Communications', name: 'Solar / Hand-Crank / Battery AM/FM Weather Radio + Spare Batteries', priority: 'P2 - Water, Food & Sanitation', zone: 'Molo Master Grab-Bag', qty: 0, target: 2, price: 850, priceSource: 'Estimate, verify at store', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'NONE', unitDays: 0, storeNote: 'ACE Hardware / Official Electronics Store' },
+        { id: 'inv31', category: '07. Lighting & Off-Grid Communications', name: 'White Household Candles (Pack — BNPC Regulated, Supervised Use Only)', priority: 'P2 - Water, Food & Sanitation', zone: 'Molo Pantry', qty: 0, target: 6, price: 45, priceSource: 'DTI SRP Bulletin', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'NONE', unitDays: 0, storeNote: 'DTI BNPC Reference — Never use near Mommy Den path or kids' },
+        { id: 'inv32', category: '08. Accessible Evacuation & Blindness Aids (Mommy Den)', name: 'Tactile Medication ID Kit (Thick Rubber Bands, Raised Bump Dots & Textured Pill Box)', priority: 'P1 - Life & Medical', zone: 'Guimaras Transit Bag (Buenavista)', qty: 0, target: 2, price: 250, priceSource: 'Estimate, verify at store', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'NONE', unitDays: 0, storeNote: 'Medical Supply — Distinguishes Mommy Den Metformin by touch' },
+        { id: 'inv33', category: '08. Accessible Evacuation & Blindness Aids (Mommy Den)', name: 'Spare Collapsible White Cane & High-Contrast Anti-Glare Glasses + Whistle', priority: 'P1 - Life & Medical', zone: 'Molo Master Grab-Bag', qty: 0, target: 1, price: 650, priceSource: 'Estimate, verify at store', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'NONE', unitDays: 0, storeNote: 'Assistive Device / Medical Supply Store' },
+        { id: 'inv34', category: '09. Pet Preparedness (Zoe - Shih Poo)', name: 'Zoe Dry & Wet Dog Food (Sealed Kilogram Bags / Cans — 7-Day + 3-Day Buffer)', priority: 'P1 - Life & Medical', zone: 'Molo Pantry', qty: 0, target: 4, price: 380, priceSource: 'Estimate, verify at store', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'NONE', unitDays: 0, storeNote: 'Pet Express SM City Iloilo / Official Brand Store' },
+        { id: 'inv35', category: '09. Pet Preparedness (Zoe - Shih Poo)', name: 'Zoe Dedicated Bottled Water (10L), Cooling Mat & Collapsible Bowls', priority: 'P1 - Life & Medical', zone: 'Molo Master Grab-Bag', qty: 0, target: 2, price: 450, priceSource: 'Estimate, verify at store', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'NONE', unitDays: 0, storeNote: 'Pet Express SM City Iloilo' },
+        { id: 'inv36', category: '09. Pet Preparedness (Zoe - Shih Poo)', name: 'Ventilated Hard-Sided Pet Carrier, Spare Leash/Harness with ID & Vax Booklet Pouch', priority: 'P1 - Life & Medical', zone: 'Molo Master Grab-Bag', qty: 0, target: 1, price: 1200, priceSource: 'Estimate, verify at store', expiry: '', status: 'Needs Verification', lastChecked: 'Never', pillar: 'NONE', unitDays: 0, storeNote: 'Pet Express SM City Iloilo' }
+      ],
+      members: [
+        {
+          id: 'm1', name: 'Me (Family Manager)', age: '30', location: 'MOLO', group: 'Adults & Helpers',
+          conditions: 'Sole Hub & Logistics Coordinator',
+          safetyRules: 'Coordinate early ferry transfer for Mommy Den & Daddy Danny (Guimaras) and pickup for Daddy Grampy (Jaro) before storm signal escalation.',
+          responderNotes: 'Blood Type: Needs Verification | Primary Family Decision Maker',
+          meds: [
+            { id: 'med101', name: 'Personal Maintenance / First-Aid Meds (Add if applicable)', supplyDays: 0, status: 'Needs Verification', storage: 'Room temp dry pouch', verifiedBy: 'Needs clinician/pharmacist check' }
+          ]
+        },
+        {
+          id: 'm2', name: 'Jules (Partner)', age: '41', location: 'MOLO', group: 'Chronic Conditions',
+          conditions: 'Diabetic on Insulin',
+          safetyRules: 'CRITICAL COLD-CHAIN RULE: Keep insulin strictly within the specific product labeled storage temperature range. Never freeze insulin (keep insulated barrier between ice packs and vials/pens). Verify prolonged brownout room-temp duration limits and outage contingencies with pharmacist or clinician. Keep fast-acting glucose (juice/glucose tabs) in pocket for hypoglycemia.',
+          responderNotes: 'Diabetic on Insulin | Blood Type: Needs Verification | Physician: Needs Verification',
+          meds: [
+            { id: 'med102', name: 'Insulin (Confirm exact brand/type & pen/vial specs)', supplyDays: 0, status: 'Needs Verification', storage: 'Refrigerated per label (2°C–8°C unopened; check insert for in-use room temp limit & outage cooler plan)', verifiedBy: 'Confirm with Pharmacist/Clinician' },
+            { id: 'med103', name: 'Insulin Needles / Pen Tips & Glucometer Strips', supplyDays: 0, status: 'Needs Verification', storage: 'Dry clean medical kit', verifiedBy: 'Confirm with Pharmacist/Clinician' }
+          ]
+        },
+        {
+          id: 'm3', name: 'Daddy Grampy (Father)', age: '53', location: 'JARO', group: 'Chronic Conditions',
+          conditions: 'Candy, Kidney Concerns, Hypertension (No prescribed fluid restriction on file)',
+          safetyRules: 'STRICT SAFETY RULE: NEVER prescribe individual fluid intake volumes in this hub. Follow his clinician’s specific kidney-care and hydration instructions at all times. Never skip, alter doses, or substitute his daily candy regimen or blood-pressure medications. Consolidate from Alta Tierra, Jaro to Molo Home Base before severe weather.',
+          responderNotes: 'Candy, Kidney Concerns, Hypertension | No prescribed fluid restriction — follow Nephrologist/Physician guidance | Blood Type: Needs Verification',
+          meds: [
+            { id: 'med104', name: 'Daily Candy Regimen (Confirm exact prescription names — never interrupt)', supplyDays: 0, status: 'Needs Verification', storage: 'Store strictly per bottle label in dry grab-bag; keep minimum 14–30 day buffer', verifiedBy: 'Confirm with Clinic / Physician' },
+            { id: 'med105', name: 'Hypertension & Kidney Medications (Confirm exact names)', supplyDays: 0, status: 'Needs Verification', storage: 'Room temperature, dry container', verifiedBy: 'Confirm with Physician/Pharmacist' }
+          ]
+        },
+        {
+          id: 'm4', name: 'Mommy Den (Jules’s Mother)', age: '63', location: 'GUIMARAS', group: 'Older Adults & Chronic Conditions',
+          conditions: 'Diabetic (Metformin tablets only — NO insulin) & Blind',
+          safetyRules: 'ACCESSIBILITY & SAFETY RULE: Uses Metformin tablets (no insulin). Apply distinct tactile markers (e.g., 2 thick rubber bands or raised tactile dots) on her Metformin container so she can identify it by touch. Designated Sighted Helper: Daddy Danny while in Brgy. Pina, Guimaras; Me, Mica, and Mau once consolidated at Molo Home Base. Evacuate across Iloilo Strait BEFORE Coast Guard suspends boats.',
+          responderNotes: 'Blind & Diabetic (Oral Metformin) | Requires sighted guide & tactile med labels | Blood Type: Needs Verification',
+          meds: [
+            { id: 'med106', name: 'Metformin Tablets (Confirm exact mg strength & schedule)', supplyDays: 0, status: 'Needs Verification', storage: 'Tactile-marked waterproof pill bottle (2 rubber bands / raised dots); keep buffer at both Guimaras & Molo', verifiedBy: 'Confirm with Physician/Pharmacist' },
+            { id: 'med107', name: 'Other Maintenance Meds (Add as verified)', supplyDays: 0, status: 'Needs Verification', storage: 'Use distinct tactile shape/band from Metformin', verifiedBy: 'Needs Verification' }
+          ]
+        },
+        {
+          id: 'm5', name: 'Daddy Danny (Jules’s Father)', age: '64', location: 'GUIMARAS', group: 'Older Adults & Chronic Conditions',
+          conditions: 'Prostate-related condition, Multiple Medications, Senior Heat Risk',
+          safetyRules: 'Primary sighted companion for Mommy Den while in Brgy. Pina, Buenavista. High heat-exhaustion risk during power outages; ensure cool shaded rest, fan ventilation, and unobstructed bathroom access during evacuation. Consolidate early to Molo Home Base.',
+          responderNotes: 'Prostate condition + multiple maintenance meds | Senior (64) | Blood Type: Needs Verification',
+          meds: [
+            { id: 'med108', name: 'Prostate Medication (Confirm exact prescription name)', supplyDays: 0, status: 'Needs Verification', storage: 'Room temperature dry pouch', verifiedBy: 'Confirm with Urologist/Pharmacist' },
+            { id: 'med109', name: 'Additional Maintenance Medications (Click + Add Med below as identified)', supplyDays: 0, status: 'Needs Verification', storage: 'Room temperature dry pouch', verifiedBy: 'Needs Verification' }
+          ]
+        },
+        {
+          id: 'm6', name: 'Eli (Youngest Child)', age: '17 months', location: 'MOLO', group: 'Children (Pediatric Priority)',
+          conditions: '17-month-old Toddler, Former Preemie (High Heat & Dehydration Vulnerability)',
+          safetyRules: 'FORMER PREEMIE HEAT & HYDRATION WATCH: Check every 2–3 hours during brownouts/El Niño heat for wet diapers (fewer than 4–6 wet diapers/day or dark urine is a red flag), dry mouth, crying without tears, sunken soft spot/eyes, unusual lethargy, or rapid breathing. Dress in single-layer breathable cotton, keep rechargeable fan running, and offer age-appropriate milk/water/ORS as directed by pediatrician.',
+          responderNotes: '17-month-old Former Preemie | Pediatrician Contact: Needs Verification | Weight: Needs Verification',
+          meds: [
+            { id: 'med110', name: 'Pediatrician-Prescribed Vitamins / Nebulizer or Fever Drops (Confirm exact items)', supplyDays: 0, status: 'Needs Verification', storage: 'Cool dry pediatric kit with calibrated dropper/syringe', verifiedBy: 'Confirm with Pediatrician' }
+          ]
+        },
+        {
+          id: 'm7', name: 'Addy (Child)', age: '8', location: 'MOLO', group: 'Children (Pediatric Priority)',
+          conditions: '8-year-old Child',
+          safetyRules: 'HEAT & EVACUATION SAFETY: Schedule mandatory water breaks during hot afternoons/brownouts; watch for headache, dizziness, cramps, or flushed skin. Keep emergency ID card with Molo Home Base address and parent phone numbers inside grab-bag.',
+          responderNotes: 'Age 8 | Allergies/Blood Type: Needs Verification',
+          meds: [
+            { id: 'med111', name: 'Children’s Antihistamine / Fever Meds (Confirm with pediatrician)', supplyDays: 0, status: 'Needs Verification', storage: 'Pediatric first-aid pouch', verifiedBy: 'Needs Verification' }
+          ]
+        },
+        {
+          id: 'm8', name: 'Drei (Child)', age: '5', location: 'MOLO', group: 'Children (Pediatric Priority)',
+          conditions: '5-year-old Child',
+          safetyRules: 'HEAT & EVACUATION SAFETY: Monitor closely for heat irritability, flushed dry skin, or nausea during brownouts. Assign a specific adult hand-holder (Me, Jules, Mica, or Mau) during any evacuation movement.',
+          responderNotes: 'Age 5 | Allergies/Blood Type: Needs Verification',
+          meds: [
+            { id: 'med112', name: 'Children’s Maintenance / Fever / Allergy Meds (Confirm with pediatrician)', supplyDays: 0, status: 'Needs Verification', storage: 'Pediatric first-aid pouch', verifiedBy: 'Needs Verification' }
+          ]
+        },
+        {
+          id: 'm9', name: 'Mica (Helper)', age: '26', location: 'MOLO', group: 'Adults & Helpers',
+          conditions: 'Household Helper (Female, 26)',
+          safetyRules: 'Trained backup sighted assistant for Mommy Den (knows tactile medication bottle bands) and pediatric heat/diaper monitor for Eli, Addy, and Drei. Ensure personal grab-bag, ID, and family emergency contact are packed.',
+          responderNotes: 'Emergency Next-of-Kin Contact: Needs Verification',
+          meds: [
+            { id: 'med113', name: 'Personal Medications (Add if applicable)', supplyDays: 0, status: 'Needs Verification', storage: 'Personal grab-bag', verifiedBy: 'Needs Verification' }
+          ]
+        },
+        {
+          id: 'm10', name: 'Mau (Helper)', age: '19', location: 'MOLO', group: 'Adults & Helpers',
+          conditions: 'Household Helper (Female, 19)',
+          safetyRules: 'Assists with child supervision (Addy, Drei, Eli), Zoe’s pet carrier & water, and Mommy Den’s safe indoor mobility at Molo Home Base. Ensure personal grab-bag, ID, and next-of-kin contact are packed.',
+          responderNotes: 'Emergency Next-of-Kin Contact: Needs Verification',
+          meds: [
+            { id: 'med114', name: 'Personal Medications (Add if applicable)', supplyDays: 0, status: 'Needs Verification', storage: 'Personal grab-bag', verifiedBy: 'Needs Verification' }
+          ]
+        },
+        {
+          id: 'm11', name: 'Zoe (Dog — Shih Poo)', age: '23 months', location: 'MOLO', group: 'Pet (Canine Heat Priority)',
+          conditions: '23-month-old Female Shih Poo (Fluffy double coat / short-muzzle heat sensitivity)',
+          safetyRules: 'CANINE HEAT SAFETY: Shih Poos overheat rapidly during brownouts. Watch for heavy raspy panting, bright red/purple gums, thick drooling, or weakness. Keep coat trimmed in hot months, provide cool tile/cooling mat + dedicated fan, test pavement with back of hand for 7 seconds before walks, and keep hard-sided/ventilated carrier + leash + vaccination book ready.',
+          responderNotes: 'Female Shih Poo (23 mos) | Vet Clinic Contact: Needs Verification | Rabies Vax Date: Needs Verification',
+          meds: [
+            { id: 'med115', name: 'Vet-Prescribed Tick/Flea/Heartworm Prevention & Pet Meds', supplyDays: 0, status: 'Needs Verification', storage: 'Pet grab-bag pouch', verifiedBy: 'Confirm with Veterinarian' }
+          ]
+        }
+      ],
+      contacts: [
+        { id: 'c1', name: 'Iloilo City CDRRMO (Emergency Operations)', role: 'Molo & Jaro Primary Emergency Response', phone: 'Verify latest hotline at cdrrmo.iloilocity.gov.ph / 911' },
+        { id: 'c2', name: 'MORE Electric and Power Corp (MORE Power)', role: 'Molo & Jaro Electricity Outage Hotline', phone: '(033) 330-6673 / Verify current mobile hotline' },
+        { id: 'c3', name: 'GUIMELCO (Guimaras Electric Cooperative)', role: 'Brgy. Pina, Buenavista Electricity Outages', phone: 'Needs Verification — Enter local Buenavista feeder hotline' },
+        { id: 'c4', name: 'Buenavista MDRRMO / Guimaras PDRRMO', role: 'Guimaras Local Emergency & Port Updates', phone: 'Needs Verification — Enter local hotline' },
+        { id: 'c5', name: 'Daddy Grampy Clinician / Specialty Clinic', role: 'Kidney, Candy & Hypertension Care Instructions (Jaro)', phone: 'Needs Verification — Enter Doctor/Clinic Phone' },
+        { id: 'c6', name: 'Jules & Mommy Den Diabetes Clinician / Pharmacy', role: 'Insulin Cold-Chain & Metformin Refills', phone: 'Needs Verification — Enter Clinic/Mercury Drug Phone' },
+        { id: 'c7', name: 'Eli, Addy & Drei Pediatrician', role: 'Pediatric Heat/Hydration & Former Preemie Care', phone: 'Needs Verification — Enter Pediatrician Phone' }
+      ]
+    };
+
+    let appState = loadState();
+    let liveWeatherCache = {};
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return JSON.parse(JSON.stringify(DEFAULT_STATE));
+        const parsed = JSON.parse(raw);
+        return Object.assign(JSON.parse(JSON.stringify(DEFAULT_STATE)), parsed);
+      } catch (e) {
+        return JSON.parse(JSON.stringify(DEFAULT_STATE));
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      renderAll();
+    }
+
+    function switchTab(tabId, btnEl) {
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('nav.tabs button').forEach(b => b.setAttribute('aria-selected', 'false'));
+      document.getElementById(tabId).classList.add('active');
+      btnEl.setAttribute('aria-selected', 'true');
+    }
+
+    function setLocationFilter(loc) {
+      appState.locationFilter = loc;
+      saveState();
+    }
+
+    function toggleRoleMode() {
+      appState.roleMode = appState.roleMode === 'ADMIN' ? 'HELPER' : 'ADMIN';
+      saveState();
+    }
+
+    function toggleHighContrast() {
+      appState.highContrast = !appState.highContrast;
+      saveState();
+    }
+
+    function toggleLargeText() {
+      appState.largeText = !appState.largeText;
+      saveState();
+    }
+
+    function toggleStarterItem(id) {
+      appState.starterChecks[id] = !appState.starterChecks[id];
+      saveState();
+    }
+
+    function renderStarterChecklist() {
+      const container = document.getElementById('starterWavesContainer');
+      let total = 0;
+      let done = 0;
+
+      container.innerHTML = STARTER_WAVES.map(w => {
+        const itemsHtml = w.items.map(it => {
+          total++;
+          const isChecked = !!appState.starterChecks[it.id];
+          if (isChecked) done++;
+          return `<label style="display:flex; align-items:flex-start; gap:0.6rem; padding:0.5rem; border:2px solid var(--border); border-radius:6px; background:var(--bg); margin-bottom:0.45rem; cursor:pointer;">
+            <input type="checkbox" style="width:24px; height:24px; min-height:24px; margin-top:0.15rem;" ${isChecked ? 'checked' : ''} onchange="toggleStarterItem('${it.id}')">
+            <span style="font-size:0.95rem; ${isChecked ? 'text-decoration:line-through; opacity:0.75;' : ''}">${it.label}</span>
+          </label>`;
+        }).join('');
+
+        return `<div class="metric-box">
+          <h3 style="margin-top:0; font-size:1.05rem;">${w.wave}</h3>
+          <p style="margin:0.25rem 0 0.6rem 0; font-size:0.88rem;"><span class="badge badge-ok">📍 ${w.store}</span></p>
+          ${itemsHtml}
+        </div>`;
+      }).join('');
+
+      const badge = document.getElementById('starterProgressBadge');
+      badge.textContent = `${done} / ${total} Starter Items Purchased`;
+      badge.className = done === total ? 'badge badge-ok' : 'badge badge-warn';
+    }
+
+    function renderAutonomyDashboard() {
+      let waterDays = 0;
+      let utilityWaterDays = 0;
+      let foodDays = 0;
+      let sanitationDays = 0;
+      let coldChainHours = 0;
+
+      appState.inventory.forEach(item => {
+        const q = parseFloat(item.qty) || 0;
+        const mult = parseFloat(item.unitDays) || 0;
+        if (item.pillar === 'WATER') waterDays += q * mult;
+        else if (item.pillar === 'UTILITY_WATER') utilityWaterDays += q * mult;
+        else if (item.pillar === 'FOOD') foodDays += q * mult;
+        else if (item.pillar === 'SANITATION') sanitationDays += q * mult;
+        else if (item.pillar === 'COLD_CHAIN') coldChainHours += q * mult;
+      });
+
+      const totalItems = appState.inventory.length;
+      const confirmedItems = appState.inventory.filter(i => i.status === 'Confirmed' && i.qty >= i.target).length;
+      const readinessPct = totalItems > 0 ? Math.round((confirmedItems / totalItems) * 100) : 0;
+
+      const metrics = [
+        {
+          title: '1. Drinking Water',
+          val: `${waterDays.toFixed(1)} / 7.0 Days`,
+          pct: Math.min(100, Math.round((waterDays / 7) * 100)),
+          note: '9 people + Zoe (Daddy Grampy follows clinician kidney rule)'
+        },
+        {
+          title: '2. Utility & Drum Water',
+          val: `${utilityWaterDays.toFixed(1)} / 7.0 Days`,
+          pct: Math.min(100, Math.round((utilityWaterDays / 7) * 100)),
+          note: 'Target: 4× 150–200L drums at Molo'
+        },
+        {
+          title: '3. Pantry & Eli Food',
+          val: `${foodDays.toFixed(1)} / 7.0 Days`,
+          pct: Math.min(100, Math.round((foodDays / 7) * 100)),
+          note: 'BNPC staples + Eli 17m toddler milk'
+        },
+        {
+          title: '4. Off-Grid Sanitation',
+          val: `${sanitationDays.toFixed(1)} / 7.0 Days`,
+          pct: Math.min(100, Math.round((sanitationDays / 7) * 100)),
+          note: 'Commode liners, wipes & hygiene'
+        },
+        {
+          title: '5. Insulin Cold-Chain & Verified Score',
+          val: `${coldChainHours.toFixed(0)} / 72 Hrs (${readinessPct}% Confirmed)`,
+          pct: Math.min(100, Math.round((coldChainHours / 72) * 100)),
+          note: `${confirmedItems}/${totalItems} items physically confirmed`
+        }
+      ];
+
+      document.getElementById('autonomyDashboard').innerHTML = metrics.map(m => {
+        const badgeCls = m.pct >= 100 ? 'badge-ok' : (m.pct >= 40 ? 'badge-warn' : 'badge-danger');
+        return `<div class="metric-box">
+          <div style="font-weight:800; font-size:0.95rem;">${m.title}</div>
+          <div class="badge ${badgeCls}" style="margin:0.35rem 0;">${m.val}</div>
+          <div class="progress-track" role="progressbar" aria-valuenow="${m.pct}" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-fill" style="width:${m.pct}%;"></div>
+          </div>
+          <div style="font-size:0.82rem; color:var(--text-muted);">${m.note}</div>
+        </div>`;
+      }).join('');
+    }
+
+    function selectHazard(key) {
+      appState.activeHazard = key;
+      saveState();
+    }
+
+    function toggleHazardTask(taskId) {
+      appState.hazardChecks[taskId] = !appState.hazardChecks[taskId];
+      saveState();
+    }
+
+    function resetHazardChecks() {
+      appState.hazardChecks = {};
+      saveState();
+    }
+
+    function renderHazardPlaybook() {
+      const active = appState.activeHazard || 'HEAT';
+      ['HEAT', 'BROWNOUT', 'TYPHOON', 'QUAKE'].forEach(k => {
+        const btn = document.getElementById('hazBtn_' + k);
+        if (btn) {
+          btn.className = (k === active) ? 'btn-primary' : '';
+        }
+      });
+
+      const scenario = HAZARD_SCENARIOS[active];
+      const container = document.getElementById('hazardPlaybookContainer');
+      container.innerHTML = `
+        <div style="border:2px solid var(--border); background:var(--bg); padding:0.9rem; border-radius:6px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.6rem;">
+            <h3 style="margin:0;">${scenario.title}</h3>
+            <button onclick="resetHazardChecks()" style="min-height:38px; padding:0.3rem 0.7rem;">↺ Reset Checks</button>
+          </div>
+          <div style="display:grid; gap:0.5rem;">
+            ${scenario.tasks.map(t => {
+              const checked = !!appState.hazardChecks[t.id];
+              return `<label style="display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem; border:2px solid var(--border); border-radius:6px; background:var(--surface); cursor:pointer;">
+                <input type="checkbox" style="width:26px; height:26px; min-height:26px; margin-top:0.15rem;" ${checked ? 'checked' : ''} onchange="toggleHazardTask('${t.id}')">
+                <span>
+                  <span class="badge ${checked ? 'badge-ok' : 'badge-warn'}">${t.who}</span>
+                  <span style="${checked ? 'text-decoration:line-through;' : ''}"><strong>${t.text}</strong></span>
+                </span>
+              </label>`;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function computeHeatIndexC(tempC, rh) {
+      if (tempC < 26.7) return tempC;
+      const T = (tempC * 9 / 5) + 32;
+      const R = rh;
+      let HI = -42.379 + 2.04901523 * T + 10.14333127 * R
+        - 0.22475541 * T * R - 0.00683783 * T * T
+        - 0.05481717 * R * R + 0.00122874 * T * T * R
+        + 0.00085282 * T * R * R - 0.00000199 * T * T * R * R;
+      return Math.round(((HI - 32) * 5 / 9) * 10) / 10;
+    }
+
+    function getPagasaHeatBand(hiC) {
+      if (hiC >= 52) {
+        return { level: 'EXTREME DANGER (52°C+)', symbol: '🛑 [CRITICAL]', cls: 'badge-danger', advice: 'Heat stroke imminent! Prioritize Eli (former preemie), Mommy Den, Daddy Danny, Daddy Grampy, and Zoe cooling immediately.' };
+      } else if (hiC >= 42) {
+        return { level: 'DANGER (42°C–51°C)', symbol: '⚠️ [DANGER]', cls: 'badge-danger', advice: 'Heat cramps & exhaustion likely; heat stroke possible. Enforce indoor shade, fans, Eli diaper checks, and Zoe cooling.' };
+      } else if (hiC >= 33) {
+        return { level: 'EXTREME CAUTION (33°C–41°C)', symbol: '🔶 [EXTREME CAUTION]', cls: 'badge-warn', advice: 'Heat cramps and exhaustion possible. Keep hydration steady (per clinician rules for Daddy Grampy).' };
+      } else if (hiC >= 27) {
+        return { level: 'CAUTION (27°C–32°C)', symbol: 'ℹ️ [CAUTION]', cls: 'badge-warn', advice: 'Fatigue possible with prolonged exposure. Maintain regular water intake.' };
+      }
+      return { level: 'NORMAL (<27°C)', symbol: '✅ [SAFE]', cls: 'badge-ok', advice: 'Normal thermal comfort range.' };
+    }
+
+    async function fetchAllLiveFeeds() {
+      const stampEl = document.getElementById('weatherLastUpdated');
+      stampEl.textContent = 'Fetching live Open-Meteo & USGS data...';
+      const nowStr = new Date().toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' });
+
+      for (const loc of LOCATIONS) {
+        try {
+          const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&daily=temperature_2m_max,precipitation_probability_max,wind_speed_10m_max&timezone=Asia%2FManila&forecast_days=3`;
+          const res = await fetch(url);
+          const data = await res.json();
+          const t = data.current.temperature_2m;
+          const rh = data.current.relative_humidity_2m;
+          const hi = computeHeatIndexC(t, rh);
+          liveWeatherCache[loc.id] = {
+            temp: t,
+            rh: rh,
+            wind: data.current.wind_speed_10m,
+            rain: data.current.precipitation,
+            hi: hi,
+            dailyMaxT: data.daily.temperature_2m_max,
+            dailyRainProb: data.daily.precipitation_probability_max,
+            dailyMaxWind: data.daily.wind_speed_10m_max,
+            updatedAt: nowStr
+          };
+        } catch (err) {
+          liveWeatherCache[loc.id] = { error: true, updatedAt: nowStr };
+        }
+      }
+      stampEl.textContent = `Weather Feed Last Updated: ${nowStr}`;
+      stampEl.className = 'badge badge-ok';
+      renderWeatherCards();
+      await fetchUsgsQuakes(nowStr);
+    }
+
+    async function fetchUsgsQuakes(nowStr) {
+      const statusEl = document.getElementById('quakeStatus');
+      const listEl = document.getElementById('quakeList');
+      try {
+        const res = await fetch('https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&latitude=10.70&longitude=122.56&maxradiuskm=300&limit=5&minmagnitude=3.0');
+        const data = await res.json();
+        statusEl.textContent = `USGS Feed Last Checked: ${nowStr}`;
+        statusEl.className = 'badge badge-ok';
+        if (!data.features || data.features.length === 0) {
+          listEl.innerHTML = '<li>✅ No M3.0+ earthquakes recorded within 300km in the recent USGS window. Always verify local felt reports at PHIVOLCS.</li>';
+        } else {
+          listEl.innerHTML = data.features.map(f => {
+            const dt = new Date(f.properties.time).toLocaleString('en-PH');
+            return `<li><strong>M${f.properties.mag}</strong> — ${f.properties.place} (${dt})</li>`;
+          }).join('');
+        }
+      } catch (e) {
+        statusEl.textContent = `USGS Offline (${nowStr}) — Use PHIVOLCS Quick Link`;
+        statusEl.className = 'badge badge-warn';
+      }
+    }
+
+    function renderWeatherCards() {
+      const container = document.getElementById('weatherCards');
+      const filtered = LOCATIONS.filter(l => appState.locationFilter === 'ALL' || appState.locationFilter === l.id);
+      container.innerHTML = filtered.map(loc => {
+        const w = liveWeatherCache[loc.id];
+        if (!w) {
+          return `<div class="card">
+            <h3 style="margin-top:0;">${loc.name}</h3>
+            <p><span class="badge badge-warn">Status: Offline / Waiting for Refresh</span></p>
+            <p><strong>Electricity Provider:</strong> ${loc.elec}</p>
+            <p>Tap <strong>Refresh Live Weather &amp; Quakes</strong> above to load current Heat Index and 3-day outlook.</p>
+          </div>`;
+        }
+        if (w.error) {
+          return `<div class="card">
+            <h3 style="margin-top:0;">${loc.name}</h3>
+            <p><span class="badge badge-danger">⚠️ Live Feed Unreachable (${w.updatedAt})</span></p>
+            <p>Check PAGASA or Iloilo CDRRMO quick links below, or view saved Offline Bulletin Log.</p>
+          </div>`;
+        }
+        const band = getPagasaHeatBand(w.hi);
+        return `<div class="card">
+          <h3 style="margin-top:0;">${loc.name}</h3>
+          <div class="badge ${band.cls}" style="font-size:1.05rem;">
+            ${band.symbol} Heat Index: ${w.hi}°C — ${band.level}
+          </div>
+          <p style="margin:0.5rem 0;">
+            <strong>Air Temp:</strong> ${w.temp}°C | <strong>Humidity:</strong> ${w.rh}% | <strong>Wind:</strong> ${w.wind} km/h
+          </p>
+          <p style="font-size:0.9rem; margin:0.4rem 0;"><strong>Health Action:</strong> ${band.advice}</p>
+          <p style="font-size:0.9rem; margin:0.4rem 0;">
+            <strong>3-Day Max Temp / Rain Chance:</strong>
+            Day 1: ${w.dailyMaxT[0]}°C (${w.dailyRainProb[0]}% rain) |
+            Day 2: ${w.dailyMaxT[1]}°C (${w.dailyRainProb[1]}% rain) |
+            Day 3: ${w.dailyMaxT[2]}°C (${w.dailyRainProb[2]}% rain)
+          </p>
+          <div style="font-size:0.85rem; color:var(--text-muted);">Electricity: ${loc.elec} | Updated: ${w.updatedAt}</div>
+        </div>`;
+      }).join('');
+    }
+
+    function saveBulletinLog() {
+      appState.bulletinLog.weatherAlert = document.getElementById('logWeatherAlert').value.trim() || 'None logged';
+      appState.bulletinLog.morePower = document.getElementById('logMorePower').value.trim() || 'None logged';
+      appState.bulletinLog.guimelco = document.getElementById('logGuimelco').value.trim() || 'None logged';
+      appState.bulletinLog.lastSaved = new Date().toLocaleString('en-PH');
+      saveState();
+    }
+
+    function copySituationSummary() {
+      const log = appState.bulletinLog;
+      const text = `MOLO HOME BASE SITUATION UPDATE (${new Date().toLocaleString('en-PH')})\n` +
+        `• Weather/CDRRMO Alert: ${log.weatherAlert}\n` +
+        `• Molo & Jaro (MORE Power): ${log.morePower}\n` +
+        `• Guimaras (GUIMELCO & Ferry): ${log.guimelco}\n` +
+        `• Consolidation Base: Zone 4, Brgy. South Fundidor, Molo (Check insulin cooler for Jules, tactile Metformin pouch for Mommy Den, kidney hydration instructions + daily candy kit for Daddy Grampy, and pediatric/pet heat gear for Eli & Zoe).`;
+      navigator.clipboard.writeText(text).then(() => alert('Situation summary copied! Paste directly into your family chat.'));
+    }
+
+    function updateDtiDate(val) {
+      appState.dtiLastUpdated = val;
+      saveState();
+    }
+
+    function openAddInventoryModal(editId) {
+      if (appState.roleMode === 'HELPER') return;
+      const card = document.getElementById('invFormCard');
+      card.style.display = 'block';
+      if (editId) {
+        const item = appState.inventory.find(i => i.id === editId);
+        if (!item) return;
+        document.getElementById('invFormTitle').textContent = 'Edit Supply Item';
+        document.getElementById('invEditId').value = item.id;
+        document.getElementById('invCategory').value = item.category;
+        document.getElementById('invName').value = item.name;
+        document.getElementById('invPriority').value = item.priority;
+        document.getElementById('invZone').value = item.zone || 'Molo Pantry';
+        document.getElementById('invQty').value = item.qty;
+        document.getElementById('invTarget').value = item.target;
+        document.getElementById('invPrice').value = item.price;
+        document.getElementById('invPriceSource').value = item.priceSource;
+        document.getElementById('invExpiry').value = item.expiry || '';
+        document.getElementById('invStatus').value = item.status;
+        document.getElementById('invPillar').value = item.pillar || 'NONE';
+        document.getElementById('invUnitDays').value = item.unitDays || 0;
+        document.getElementById('invStoreNote').value = item.storeNote || '';
+      } else {
+        document.getElementById('invFormTitle').textContent = 'Add Supply Item';
+        document.getElementById('invEditId').value = '';
+        document.getElementById('invName').value = '';
+        document.getElementById('invQty').value = 0;
+        document.getElementById('invTarget').value = 10;
+        document.getElementById('invPrice').value = 0;
+        document.getElementById('invExpiry').value = '';
+        document.getElementById('invStatus').value = 'Needs Verification';
+        document.getElementById('invPillar').value = 'NONE';
+        document.getElementById('invUnitDays').value = 0;
+        document.getElementById('invStoreNote').value = '';
+      }
+      card.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function closeInventoryModal() {
+      document.getElementById('invFormCard').style.display = 'none';
+    }
+
+    function saveInventoryItem() {
+      if (appState.roleMode === 'HELPER') return;
+      const editId = document.getElementById('invEditId').value;
+      const obj = {
+        id: editId || ('inv_' + Date.now()),
+        category: document.getElementById('invCategory').value,
+        name: document.getElementById('invName').value.trim() || 'Unnamed Supply Item',
+        priority: document.getElementById('invPriority').value,
+        zone: document.getElementById('invZone').value,
+        qty: parseFloat(document.getElementById('invQty').value) || 0,
+        target: parseFloat(document.getElementById('invTarget').value) || 1,
+        price: parseFloat(document.getElementById('invPrice').value) || 0,
+        priceSource: document.getElementById('invPriceSource').value,
+        expiry: document.getElementById('invExpiry').value,
+        status: document.getElementById('invStatus').value,
+        pillar: document.getElementById('invPillar').value,
+        unitDays: parseFloat(document.getElementById('invUnitDays').value) || 0,
+        lastChecked: new Date().toISOString().split('T')[0],
+        storeNote: document.getElementById('invStoreNote').value.trim()
+      };
+      if (editId) {
+        const idx = appState.inventory.findIndex(i => i.id === editId);
+        if (idx > -1) appState.inventory[idx] = obj;
+      } else {
+        appState.inventory.push(obj);
+      }
+      closeInventoryModal();
+      saveState();
+    }
+
+    function deleteInventoryItem(id) {
+      if (appState.roleMode === 'HELPER') return;
+      if (!confirm('Remove this supply item from inventory?')) return;
+      appState.inventory = appState.inventory.filter(i => i.id !== id);
+      saveState();
+    }
+
+    function isExpiredOrSoon(dateStr) {
+      if (!dateStr) return null;
+      const today = new Date();
+      const exp = new Date(dateStr);
+      const diffDays = (exp - today) / (1000 * 60 * 60 * 24);
+      if (diffDays < 0) return 'EXPIRED';
+      if (diffDays <= 30) return 'EXPIRING_30D';
+      return 'OK';
+    }
+
+    function renderInventory() {
+      const dtiBadge = document.getElementById('dtiDateBadge');
+      document.getElementById('dtiLastUpdatedDate').value = appState.dtiLastUpdated || '';
+      if (appState.dtiLastUpdated) {
+        dtiBadge.textContent = `DTI SRP Reference Date: ${appState.dtiLastUpdated}`;
+        dtiBadge.className = 'badge badge-ok';
+      } else {
+        dtiBadge.textContent = 'DTI SRP Date: Needs Verification (Set date after checking DTI bulletin)';
+        dtiBadge.className = 'badge badge-warn';
+      }
+
+      const categories = [...new Set(appState.inventory.map(i => i.category))].sort();
+      const container = document.getElementById('inventoryContainer');
+      let html = '';
+      let grandShortfallTotal = 0;
+      let replenRows = [];
+
+      categories.forEach(cat => {
+        const items = appState.inventory.filter(i => i.category === cat);
+        let catReplenSubtotal = 0;
+
+        const rowsHtml = items.map(item => {
+          const expFlag = isExpiredOrSoon(item.expiry);
+          const shortfall = Math.max(0, item.target - item.qty);
+          const needBuy = (expFlag === 'EXPIRED' || item.status === 'Damaged / Replace') ? item.target : shortfall;
+          const lineCost = needBuy * item.price;
+          catReplenSubtotal += lineCost;
+          grandShortfallTotal += lineCost;
+
+          let flags = [];
+          if (item.qty === 0) flags.push('<span class="badge badge-danger">MISSING (0)</span>');
+          else if (item.qty < item.target) flags.push(`<span class="badge badge-warn">LOW (${item.qty}/${item.target})</span>`);
+          else flags.push(`<span class="badge badge-ok">STOCKED (${item.qty}/${item.target})</span>`);
+
+          if (expFlag === 'EXPIRED') flags.push('<span class="badge badge-danger">EXPIRED</span>');
+          else if (expFlag === 'EXPIRING_30D') flags.push('<span class="badge badge-warn">EXPIRING &lt;30d</span>');
+
+          if (item.status === 'Confirmed') flags.push('<span class="badge badge-ok">Confirmed</span>');
+          else if (item.status === 'Damaged / Replace') flags.push('<span class="badge badge-danger">Damaged</span>');
+          else flags.push(`<span class="badge badge-warn">${item.status}</span>`);
+
+          const isDti = item.priceSource.includes('DTI SRP');
+          const dtiTag = isDti
+            ? `<span class="badge badge-ok">DTI SRP (${appState.dtiLastUpdated || 'Verify Date'})</span>`
+            : `<span class="badge badge-warn">${item.priceSource}</span>`;
+
+          if (needBuy > 0 || item.status !== 'Confirmed') {
+            replenRows.push({
+              priority: item.priority,
+              category: cat,
+              name: item.name,
+              zone: item.zone || 'Molo Base',
+              needBuy,
+              unitPrice: item.price,
+              lineCost,
+              sourceTag: isDti ? `DTI SRP (${appState.dtiLastUpdated || 'Verify Date'})` : item.priceSource,
+              storeNote: item.storeNote
+            });
+          }
+
+          return `<tr>
+            <td>
+              <strong>${item.name}</strong><br>
+              <span class="badge badge-ok">📍 ${item.zone || 'Molo Base'}</span>
+              <span class="badge badge-warn">${item.priority}</span><br>
+              <small>${item.storeNote || ''}</small>
+            </td>
+            <td><strong>${item.qty} / ${item.target}</strong><br><small>Checked: ${item.lastChecked}</small></td>
+            <td>₱${item.price.toFixed(2)}<br>${dtiTag}</td>
+            <td>${item.expiry || 'N/A'}</td>
+            <td>${flags.join(' ')}</td>
+            <td><strong>${needBuy} units</strong><br>(₱${lineCost.toFixed(2)})</td>
+            <td class="no-print admin-only">
+              <button onclick="openAddInventoryModal('${item.id}')">✏️ Edit</button>
+              <button class="btn-danger" onclick="deleteInventoryItem('${item.id}')">🗑️</button>
+            </td>
+          </tr>`;
+        }).join('');
+
+        html += `<div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+            <h3 style="margin:0;">${cat}</h3>
+            <span class="badge badge-warn">Group Replenishment Subtotal: ₱${catReplenSubtotal.toFixed(2)}</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Item, Zone &amp; Official Channel</th>
+                  <th>Qty / 7d Target</th>
+                  <th>Unit Price &amp; Source</th>
+                  <th>Expiry</th>
+                  <th>Status &amp; Flags</th>
+                  <th>To Buy &amp; Subtotal</th>
+                  <th class="no-print admin-only">Actions</th>
+                </tr>
+              </thead>
+              <tbody>${rowsHtml}</tbody>
+            </table>
+          </div>
+        </div>`;
+      });
+
+      container.innerHTML = html;
+
+      appState.members.forEach(m => {
+        m.meds.forEach(med => {
+          if (med.status !== 'Confirmed' || med.supplyDays < 14) {
+            replenRows.push({
+              priority: 'P1 - Life & Medical',
+              category: '05. Member Prescription / Meds / Candy',
+              name: `${m.name}: ${med.name} (Have: ${med.supplyDays} days, ${med.status})`,
+              zone: m.location,
+              needBuy: 1,
+              unitPrice: 0,
+              lineCost: 0,
+              sourceTag: 'Estimate, verify at pharmacy/clinic (Outside DTI Scope)',
+              storeNote: med.verifiedBy
+            });
+          }
+        });
+      });
+
+      replenRows.sort((a, b) => a.priority.localeCompare(b.priority));
+
+      const replenHtml = `
+        <p><span class="badge badge-danger" style="font-size:1.1rem;">Grand Replenishment Total (Priced Items): ₱${grandShortfallTotal.toFixed(2)}</span>
+        <span class="badge badge-warn">Note: Prescription medications require pharmacy/clinic verification and are excluded from DTI SRP totals.</span></p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Priority Tier</th>
+                <th>Category &amp; Storage Zone</th>
+                <th>Item to Replenish / Verify</th>
+                <th>Qty to Buy</th>
+                <th>Unit Price &amp; Source Label</th>
+                <th>Estimated Line Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${replenRows.map(r => `<tr>
+                <td><strong>${r.priority}</strong></td>
+                <td>${r.category}<br><small>📍 ${r.zone}</small></td>
+                <td><strong>${r.name}</strong><br><small>${r.storeNote || ''}</small></td>
+                <td>${r.needBuy}</td>
+                <td>₱${r.unitPrice.toFixed(2)} — <em>${r.sourceTag}</em></td>
+                <td><strong>₱${r.lineCost.toFixed(2)}</strong></td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>`;
+      document.getElementById('replenishmentSummary').innerHTML = replenHtml;
+    }
+
+    function toggleMonthlyCheck(id) {
+      const chk = appState.monthlyChecks.find(c => c.id === id);
+      if (!chk) return;
+      chk.checked = !chk.checked;
+      chk.lastDate = chk.checked ? new Date().toLocaleDateString('en-PH') : 'Needs Verification';
+      saveState();
+    }
+
+    function renderMonthlyChecklist() {
+      const container = document.getElementById('monthlyChecklistContainer');
+      container.innerHTML = appState.monthlyChecks.map(c => `
+        <label style="display:flex; align-items:center; gap:0.75rem; padding:0.65rem; border:2px solid var(--border); border-radius:6px; background:var(--bg); cursor:pointer;">
+          <input type="checkbox" style="width:28px; height:28px; min-height:28px;" ${c.checked ? 'checked' : ''} onchange="toggleMonthlyCheck('${c.id}')">
+          <span><strong>${c.label}</strong> <span class="badge ${c.checked ? 'badge-ok' : 'badge-warn'}">${c.checked ? 'Verified: ' + c.lastDate : 'Needs Verification'}</span></span>
+        </label>
+      `).join('');
+      generateMonthlyReport();
+    }
+
+    function generateMonthlyReport() {
+      const out = document.getElementById('monthlyReportOutput');
+      const now = new Date().toLocaleString('en-PH');
+      const confirmedItems = appState.inventory.filter(i => i.status === 'Confirmed').length;
+      const unverifiedItems = appState.inventory.filter(i => i.status !== 'Confirmed').length;
+      const missingOrLow = appState.inventory.filter(i => i.qty < i.target);
+      const expiredOrSoon = appState.inventory.filter(i => {
+        const st = isExpiredOrSoon(i.expiry);
+        return st === 'EXPIRED' || st === 'EXPIRING_30D';
+      });
+
+      let totalCost = 0;
+      appState.inventory.forEach(i => {
+        const shortfall = Math.max(0, i.target - i.qty);
+        totalCost += shortfall * i.price;
+      });
+
+      let medAlerts = [];
+      appState.members.forEach(m => {
+        m.meds.forEach(med => {
+          if (med.status !== 'Confirmed' || med.supplyDays < 14) {
+            medAlerts.push(`<li><strong>${m.name}:</strong> ${med.name} — Supply: ${med.supplyDays} days (Status: <em>${med.status}</em> | ${med.verifiedBy})</li>`);
+          }
+        });
+      });
+
+      out.innerHTML = `
+        <h3 style="margin-top:0;">Monthly Preparedness &amp; Off-Grid Audit Summary</h3>
+        <p><strong>Report Generated:</strong> ${now} | <strong>Audit Integrity Notice:</strong> This summary reflects self-recorded entries in the family hub. No automated physical inspection is claimed; items not explicitly toggled to "Confirmed" remain flagged as "Needs Verification."</p>
+        <div class="grid-3">
+          <div class="card">
+            <strong>Inventory Verification Breakdown (9 Categories)</strong>
+            <p style="margin:0.4rem 0;">Confirmed Items: <strong>${confirmedItems}</strong><br>Unverified / Estimated Items: <strong>${unverifiedItems}</strong><br>Low or Zero-Stock Items: <strong>${missingOrLow.length}</strong></p>
+          </div>
+          <div class="card">
+            <strong>Monthly Verification Checklist Status</strong>
+            <p style="margin:0.4rem 0;">Completed Checks: <strong>${appState.monthlyChecks.filter(c => c.checked).length} / ${appState.monthlyChecks.length}</strong><br>DTI SRP Table Date: <strong>${appState.dtiLastUpdated || 'Needs Verification'}</strong></p>
+          </div>
+          <div class="card">
+            <strong>Estimated Replenishment Budget</strong>
+            <p style="margin:0.4rem 0; font-size:1.2rem;"><strong>₱${totalCost.toFixed(2)}</strong></p>
+            <small>Includes DTI SRP staples &amp; store estimates; excludes unpriced prescriptions.</small>
+          </div>
+        </div>
+        <h4>1. Monthly Checklist Audit Log</h4>
+        <ul>
+          ${appState.monthlyChecks.map(c => `<li>${c.checked ? '✅' : '⚠️'} ${c.label} — <strong>${c.checked ? 'Last Verified ' + c.lastDate : 'NEEDS VERIFICATION'}</strong></li>`).join('')}
+        </ul>
+        <h4>2. Flagged Expiry / Damaged / Missing Stock Items (${missingOrLow.length + expiredOrSoon.length})</h4>
+        <ul>
+          ${missingOrLow.map(i => `<li><strong>[${i.priority}] ${i.name} (${i.zone}):</strong> Have ${i.qty} / Target ${i.target} (Status: ${i.status}) — Buy ${Math.max(0, i.target - i.qty)} @ ₱${i.price.toFixed(2)} (${i.priceSource})</li>`).join('')}
+          ${expiredOrSoon.map(i => `<li><strong>[EXPIRY FLAG] ${i.name}:</strong> Expiry ${i.expiry}</li>`).join('')}
+        </ul>
+        <h4>3. Member Medications &amp; Candy Needing Clinician/Pharmacist Verification or Refill (${medAlerts.length})</h4>
+        <ul>${medAlerts.join('') || '<li>All recorded medications and candy supplies confirmed with 14+ days stock.</li>'}</ul>
+      `;
+    }
+
+    function renderMembers() {
+      const container = document.getElementById('memberCardsContainer');
+      const filtered = appState.members.filter(m => appState.locationFilter === 'ALL' || appState.locationFilter === m.location);
+
+      container.innerHTML = filtered.map(m => {
+        const medsRows = m.meds.map(med => `
+          <tr>
+            <td><strong>${med.name}</strong></td>
+            <td>${med.supplyDays} days<br><span class="badge ${med.status === 'Confirmed' ? 'badge-ok' : 'badge-warn'}">${med.status}</span></td>
+            <td>${med.storage}<br><small><em>${med.verifiedBy}</em></small></td>
+            <td class="no-print admin-only">
+              <button onclick="editMemberMed('${m.id}', '${med.id}')">✏️ Edit</button>
+              <button class="btn-danger" onclick="deleteMemberMed('${m.id}', '${med.id}')">🗑️ Remove</button>
+            </td>
+          </tr>
+        `).join('');
+
+        return `<div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:0.5rem;">
+            <div>
+              <h3 style="margin:0;">${m.name} (${m.age})</h3>
+              <span class="badge badge-ok">Usual Location: ${m.location}</span>
+              <span class="badge badge-warn">${m.group}</span>
+            </div>
+            <button class="btn-primary no-print admin-only" onclick="addMemberMed('${m.id}')">➕ Add Medication / Item</button>
+          </div>
+          <p style="margin:0.5rem 0;"><strong>Conditions &amp; Focus:</strong> ${m.conditions}</p>
+          <div style="background:var(--bg); border:2px solid var(--border); padding:0.65rem; border-radius:6px; margin-bottom:0.75rem;">
+            <strong>Heat, Hydration &amp; Clinical Safety Protocol:</strong><br>
+            ${m.safetyRules}
+          </div>
+          <h4 style="margin:0.4rem 0;">Editable Medications, Candy &amp; Medical Supplies (14–30 Day Target — Never Change Doses Without Clinician)</h4>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Medication / Candy / Medical Item</th>
+                  <th>Stock (Days) &amp; Status</th>
+                  <th>Storage &amp; Clinician Verification</th>
+                  <th class="no-print admin-only">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${medsRows || '<tr><td colspan="4">No items listed yet — tap "+ Add Medication / Item" above.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function addMemberMed(memberId) {
+      if (appState.roleMode === 'HELPER') return;
+      const m = appState.members.find(x => x.id === memberId);
+      if (!m) return;
+      const name = prompt(`Enter Medication, Candy, or Medical Supply name for ${m.name}\n(Note: Record exact label name; never change doses or substitute without a clinician):`);
+      if (!name || !name.trim()) return;
+      const daysStr = prompt(`How many days of supply are currently on hand for "${name.trim()}"? (Enter 0 if unknown):`, '0');
+      const supplyDays = parseInt(daysStr, 10) || 0;
+      const confirmed = confirm(`Did you physically verify this stock and check storage instructions with ${m.name}'s clinician/pharmacist?\n\nClick OK for "Confirmed", or Cancel to mark as "Needs Verification".`);
+      const storage = prompt(`Enter storage & handling instructions (e.g., "Refrigerate 2-8°C per insert", "Tactile 2 rubber bands on bottle", or "Dry room temp pouch"):`, 'Verify storage on package insert with pharmacist');
+
+      m.meds.push({
+        id: 'med_' + Date.now(),
+        name: name.trim(),
+        supplyDays: supplyDays,
+        status: confirmed ? 'Confirmed' : 'Needs Verification',
+        storage: storage ? storage.trim() : 'Verify with pharmacist',
+        verifiedBy: confirmed ? ('Verified ' + new Date().toLocaleDateString('en-PH')) : 'Needs clinician/pharmacist verification'
+      });
+      saveState();
+    }
+
+    function editMemberMed(memberId, medId) {
+      if (appState.roleMode === 'HELPER') return;
+      const m = appState.members.find(x => x.id === memberId);
+      if (!m) return;
+      const med = m.meds.find(x => x.id === medId);
+      if (!med) return;
+
+      const name = prompt(`Update Item Name for ${m.name}:`, med.name);
+      if (name === null) return;
+      const daysStr = prompt(`Update Days Supply on hand:`, med.supplyDays);
+      const confirmed = confirm(`Mark status as "Confirmed" (OK) or "Needs Verification" (Cancel)?`);
+      const storage = prompt(`Update Storage & Accessibility Notes:`, med.storage);
+
+      med.name = name.trim() || med.name;
+      med.supplyDays = parseInt(daysStr, 10) || 0;
+      med.status = confirmed ? 'Confirmed' : 'Needs Verification';
+      med.storage = storage ? storage.trim() : med.storage;
+      med.verifiedBy = confirmed ? ('Verified ' + new Date().toLocaleDateString('en-PH')) : 'Needs clinician/pharmacist verification';
+      saveState();
+    }
+
+    function deleteMemberMed(memberId, medId) {
+      if (appState.roleMode === 'HELPER') return;
+      const m = appState.members.find(x => x.id === memberId);
+      if (!m) return;
+      if (!confirm('Remove this entry?')) return;
+      m.meds = m.meds.filter(x => x.id !== medId);
+      saveState();
+    }
+
+    function renderEvacAndContacts() {
+      const grabBags = [
+        {
+          loc: 'GUIMARAS',
+          title: '1. Brgy. Pina, Buenavista (Guimaras) → Molo Early Transit Bag',
+          who: 'Mommy Den (63, Blind & Diabetic) & Daddy Danny (64)',
+          items: [
+            'PRE-STORM RULE: Cross Jordan/Buenavista ferry to Iloilo City BEFORE TCWS Signal No. 1 suspends sea travel.',
+            'Mommy Den’s Metformin tablets in tactile-marked waterproof pouch (e.g., 2 rubber bands) + spare collapsible white cane + dark anti-glare glasses.',
+            'Daddy Danny’s prostate & maintenance medications in labeled waterproof bag.',
+            'High-contrast laminated ID & responder cards inside front pocket; Daddy Danny acts as sighted guide during transit until arrival at Molo Home Base.',
+            '2 Liters drinking water, blood glucose monitor + strips, light rain ponchos, whistle, and 20,000mAh power bank.'
+          ]
+        },
+        {
+          loc: 'JARO',
+          title: '2. Alta Tierra Village, Jaro → Molo Consolidation Bag',
+          who: 'Daddy Grampy (53 — Candy, Kidney Concerns, Hypertension)',
+          items: [
+            'Minimum 14-to-30-day sealed supply of daily candy regimen, hypertension, and kidney medications in waterproof organizer.',
+            'Written copy of clinician’s specific kidney-care & hydration instructions (never use generic fluid formulas) + latest lab summary.',
+            'Digital blood pressure cuff + extra AA batteries.',
+            '3 days breathable clothing, sturdy footwear, headlamp, 20,000mAh power bank, and drinking water.'
+          ]
+        },
+        {
+          loc: 'MOLO',
+          title: '3. Zone 4, Brgy. South Fundidor, Molo (Home Base Master Grab-Bags)',
+          who: 'Me (30), Jules (41), Addy (8), Drei (5), Eli (17m), Mica (26), Mau (19) & Zoe (Shih Poo) + Consolidated Seniors',
+          items: [
+            'Jules’s Insulin Cold-Chain Kit: Insulated cooler + evaporative cooling wallet, cold packs with barrier cloth so insulin NEVER freezes, glucometer, lancets, syringes/pen needles, and fast-acting glucose.',
+            'Eli’s Former Preemie Pediatric Bag: Toddler milk/food, sterilized bottles, ready-to-drink water, ORS packets, diapers, wipes, thermometer, and portable rechargeable stroller fan.',
+            'Addy (8) & Drei (5) Bags: Laminated child ID necklaces, comfort item, water bottles, snacks, and rain gear.',
+            'Zoe’s Pet Evacuation Kit: Ventilated hard carrier, leash/harness with ID tag, 7+3 day dog food, collapsible bowl, cooling mat, and vaccination booklet.',
+            'Waterproof Document Pouch: Government IDs, PhilHealth/Senior/PWD cards, property deeds, small-bill cash, and printed copy of this Hub.'
+          ]
+        }
+      ];
+
+      const filteredBags = grabBags.filter(b => appState.locationFilter === 'ALL' || appState.locationFilter === b.loc);
+      document.getElementById('grabBagsContainer').innerHTML = filteredBags.map(b => `
+        <div class="card">
+          <h3 style="margin-top:0;">${b.title}</h3>
+          <p><strong>Assigned Members:</strong> ${b.who}</p>
+          <ul>${b.items.map(i => `<li>${i}</li>`).join('')}</ul>
+        </div>
+      `).join('');
+
+      const isHelper = appState.roleMode === 'HELPER';
+      document.getElementById('contactsTbody').innerHTML = appState.contacts.map(c => `
+        <tr>
+          <td><strong>${c.name}</strong></td>
+          <td>${c.role}</td>
+          <td><input type="text" value="${c.phone}" ${isHelper ? 'disabled' : ''} onchange="updateContactPhone('${c.id}', this.value)"></td>
+          <td class="no-print admin-only"><button class="btn-danger" onclick="deleteContact('${c.id}')">🗑️</button></td>
+        </tr>
+      `).join('');
+
+      document.getElementById('responderTbody').innerHTML = appState.members.map(m => `
+        <tr>
+          <td><strong>${m.name}</strong> (${m.age})<br><small>Base: ${m.location}</small></td>
+          <td>${m.conditions}</td>
+          <td>
+            <ul style="margin:0; padding-left:1.1rem;">
+              ${m.meds.map(med => `<li><strong>${med.name}</strong> (${med.status}) — <em>${med.storage}</em></li>`).join('')}
+            </ul>
+          </td>
+          <td>
+            <textarea rows="2" ${isHelper ? 'disabled' : ''} onchange="updateResponderNote('${m.id}', this.value)">${m.responderNotes}</textarea>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function addEmergencyContact() {
+      if (appState.roleMode === 'HELPER') return;
+      const name = prompt('Enter Agency, Clinic, or Contact Name:');
+      if (!name) return;
+      const role = prompt('Enter Location / Role (e.g., Brgy. South Fundidor Tanod / Nephrologist):') || '';
+      const phone = prompt('Enter Phone Number / Hotline:') || 'Needs Verification';
+      appState.contacts.push({ id: 'c_' + Date.now(), name: name.trim(), role: role.trim(), phone: phone.trim() });
+      saveState();
+    }
+
+    function updateContactPhone(id, val) {
+      if (appState.roleMode === 'HELPER') return;
+      const c = appState.contacts.find(x => x.id === id);
+      if (c) { c.phone = val; saveState(); }
+    }
+
+    function deleteContact(id) {
+      if (appState.roleMode === 'HELPER') return;
+      if (!confirm('Delete this contact?')) return;
+      appState.contacts = appState.contacts.filter(x => x.id !== id);
+      saveState();
+    }
+
+    function updateResponderNote(memberId, val) {
+      if (appState.roleMode === 'HELPER') return;
+      const m = appState.members.find(x => x.id === memberId);
+      if (m) { m.responderNotes = val; saveState(); }
+    }
+
+    function exportBackup() {
+      const blob = new Blob([JSON.stringify(appState, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `molo-family-hub-v2-1-backup-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importBackup(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (!imported.inventory || !imported.members) throw new Error('Invalid format');
+          appState = imported;
+          saveState();
+          alert('Backup restored successfully!');
+        } catch (err) {
+          alert('Could not read backup file. Please choose a valid .json backup exported from this hub.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function renderAll() {
+      document.body.classList.toggle('high-contrast', !!appState.highContrast);
+      document.body.classList.toggle('large-text', !!appState.largeText);
+      document.body.classList.toggle('helper-mode', appState.roleMode === 'HELPER');
+
+      document.getElementById('btnContrast').setAttribute('aria-pressed', !!appState.highContrast);
+      document.getElementById('btnTextSize').setAttribute('aria-pressed', !!appState.largeText);
+      document.getElementById('locationFilter').value = appState.locationFilter || 'ALL';
+
+      const roleBtn = document.getElementById('btnRoleMode');
+      if (appState.roleMode === 'HELPER') {
+        roleBtn.textContent = '🔒 Role: Helper Read-Only (Tap for Admin)';
+        roleBtn.className = 'btn';
+      } else {
+        roleBtn.textContent = '🔑 Role: Admin (Full Edit)';
+        roleBtn.className = 'btn-primary';
+      }
+
+      document.getElementById('logWeatherAlert').value = appState.bulletinLog.weatherAlert;
+      document.getElementById('logMorePower').value = appState.bulletinLog.morePower;
+      document.getElementById('logGuimelco').value = appState.bulletinLog.guimelco;
+      document.getElementById('bulletinSavedStamp').textContent = `Last manually verified: ${appState.bulletinLog.lastSaved}`;
+
+      renderAutonomyDashboard();
+      renderHazardPlaybook();
+      renderWeatherCards();
+      renderStarterChecklist();
+      renderInventory();
+      renderMonthlyChecklist();
+      renderMembers();
+      renderEvacAndContacts();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderAll();
+      fetchAllLiveFeeds();
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').catch((err) => {
+          console.warn('Service worker registration skipped:', err);
+        });
+      }
+    });
+  </script>
+</body>
+</html>
