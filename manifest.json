@@ -1,19 +1,17 @@
 {
-  "name": "Molo Home Base — Family Preparedness Hub",
-  "short_name": "Molo Hub",
-  "description": "Offline-capable emergency preparedness, weather, and inventory hub for Molo Home Base.",
+  "name": "Family Preparedness Hub",
+  "short_name": "Prep Hub",
+  "description": "A private, offline-capable family preparedness hub.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#ffffff",
-  "theme_color": "#003366",
-  "icons": [
-    {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%23003366'/%3E%3Cpath d='M256 96L96 224h48v192h224V224h48L256 96zm32 240h-64v-64h-64v-64h64v-64h64v64h64v64h-64v64z' fill='%23ffffff'/%3E%3C/svg%3E",
-      "sizes": "192x192 512x512",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    }
-  ]
+  "theme_color": "#10a37f",
+  "icons": [{
+    "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='104' fill='%2310a37f'/%3E%3Cpath d='M256 106 108 226h43v174h210V226h43L256 106zm27 224h-54v-53h-53v-54h53v-53h54v53h53v54h-53v53z' fill='white'/%3E%3C/svg%3E",
+    "sizes": "192x192 512x512",
+    "type": "image/svg+xml",
+    "purpose": "any maskable"
+  }]
 }
