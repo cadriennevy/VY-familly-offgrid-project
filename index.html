@@ -1,59 +1,472 @@
-const CACHE_NAME = 'molo-family-hub-cache-v2-1';
-const CORE_ASSETS = [
-  './',
-  './index.html',
-  './manifest.json'
-];
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Molo Home Base — Family Off-Grid &amp; Preparedness Hub v2.1</title>
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#003366">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --surface: #f4f6f9;
+      --border: #222222;
+      --text: #111111;
+      --text-muted: #444444;
+      --primary: #003366;
+      --primary-text: #ffffff;
+      --accent: #0055a5;
+      --ok-bg: #e6f4ea;
+      --ok-border: #137333;
+      --ok-text: #0d5224;
+      --warn-bg: #fef7e0;
+      --warn-border: #b06000;
+      --warn-text: #5f3300;
+      --danger-bg: #fce8e6;
+      --danger-border: #c5221f;
+      --danger-text: #8c1513;
+      --base-font: 18px;
+    }
 
-// Install: Cache core app files immediately
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS))
-  );
-  self.skipWaiting();
-});
+    body.high-contrast {
+      --bg: #000000;
+      --surface: #121212;
+      --border: #ffffff;
+      --text: #ffffff;
+      --text-muted: #dddddd;
+      --primary: #ffff00;
+      --primary-text: #000000;
+      --accent: #00ffff;
+      --ok-bg: #002b11;
+      --ok-border: #00ff66;
+      --ok-text: #80ffb3;
+      --warn-bg: #332200;
+      --warn-border: #ffcc00;
+      --warn-text: #ffe680;
+      --danger-bg: #330000;
+      --danger-border: #ff4d4d;
+      --danger-text: #ff9999;
+    }
 
-// Activate: Clean up outdated caches when you upgrade versions
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
-      )
-    )
-  );
-  self.clients.claim();
-});
+    body.large-text {
+      --base-font: 22px;
+    }
 
-// Fetch: Network-first for live weather/quake APIs, Cache-first for the app shell
-self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
+    body.helper-mode .admin-only {
+      display: none !important;
+    }
 
-  // Bypass cache for live Open-Meteo & USGS API calls so offline errors trigger gracefully
-  if (url.hostname.includes('open-meteo.com') || url.hostname.includes('usgs.gov')) {
-    event.respondWith(
-      fetch(event.request).catch(() => new Response('{"offline":true}', {
-        headers: { 'Content-Type': 'application/json' }
-      }))
-    );
-    return;
-  }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: var(--base-font);
+      line-height: 1.5;
+      background-color: var(--bg);
+      color: var(--text);
+      padding-bottom: 4rem;
+    }
 
-  // Cache-first strategy for the hub UI so it opens instantly without signal
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request).then((networkResponse) => {
-        if (event.request.method === 'GET' && networkResponse.status === 200) {
-          const clone = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-        }
-        return networkResponse;
-      });
-    })
-  );
-});
+    a { color: var(--accent); font-weight: 700; text-decoration: underline; }
+    body.high-contrast a { color: var(--primary); }
+
+    header {
+      background: var(--primary);
+      color: var(--primary-text);
+      padding: 1rem;
+      border-bottom: 3px solid var(--border);
+    }
+
+    .safety-banner {
+      background: var(--warn-bg);
+      color: var(--warn-text);
+      border-bottom: 3px solid var(--warn-border);
+      padding: 0.75rem 1rem;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .helper-banner {
+      display: none;
+      background: var(--ok-bg);
+      color: var(--ok-text);
+      border-bottom: 3px solid var(--ok-border);
+      padding: 0.6rem 1rem;
+      font-weight: 800;
+    }
+    body.helper-mode .helper-banner {
+      display: block;
+    }
+
+    .top-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      background: var(--surface);
+      border-bottom: 2px solid var(--border);
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .btn, button {
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 0.6rem 1rem;
+      border: 2px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      cursor: pointer;
+      border-radius: 6px;
+      min-height: 48px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: var(--primary-text);
+    }
+
+    .btn-danger {
+      background: var(--danger-bg);
+      color: var(--danger-text);
+      border-color: var(--danger-border);
+    }
+
+    select, input, textarea {
+      font-size: 1rem;
+      padding: 0.55rem;
+      border: 2px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      border-radius: 6px;
+      min-height: 46px;
+      width: 100%;
+    }
+
+    nav.tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      padding: 0.75rem 1rem;
+      background: var(--surface);
+      border-bottom: 3px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    nav.tabs button {
+      flex: 1 1 auto;
+      justify-content: center;
+    }
+
+    nav.tabs button[aria-selected="true"] {
+      background: var(--primary);
+      color: var(--primary-text);
+      outline: 3px solid var(--border);
+    }
+
+    main {
+      max-width: 1220px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .card {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+      gap: 1rem;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+
+    .grid-5 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .metric-box {
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 0.85rem;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 18px;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 9px;
+      overflow: hidden;
+      margin: 0.4rem 0;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--primary);
+      transition: width 0.25s ease;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.6rem;
+      font-weight: 800;
+      border-radius: 4px;
+      border: 2px solid var(--border);
+      font-size: 0.9rem;
+      margin: 0.15rem;
+    }
+
+    .badge-ok { background: var(--ok-bg); color: var(--ok-text); border-color: var(--ok-border); }
+    .badge-warn { background: var(--warn-bg); color: var(--warn-text); border-color: var(--warn-border); }
+    .badge-danger { background: var(--danger-bg); color: var(--danger-text); border-color: var(--danger-border); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.75rem;
+    }
+
+    th, td {
+      border: 2px solid var(--border);
+      padding: 0.6rem;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: var(--primary);
+      color: var(--primary-text);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    @media print {
+      nav.tabs, .top-controls, .no-print { display: none !important; }
+      .tab-panel { display: block !important; page-break-after: always; }
+      body { font-size: 13pt; background: #fff; color: #000; }
+      .card { break-inside: avoid; border: 2px solid #000; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1 style="margin:0; font-size:1.5rem;">Molo Home Base — Family Off-Grid &amp; Preparedness Hub (v2.1)</h1>
+    <p style="margin:0.3rem 0 0 0; font-size:0.95rem;">
+      10 Household Members + Zoe (Shih Poo) | Monitoring: Molo, Jaro &amp; Buenavista (Guimaras) | Consolidation Base: Zone 4, Brgy. South Fundidor, Molo
+    </p>
+  </header>
+
+  <div class="safety-banner" role="region" aria-label="Critical Safety and Clinical Rules">
+    ⚠️ CLINICAL &amp; SAFETY NOTICE: This hub supports household logistics only and NEVER replaces clinicians, pharmacists, or official NDRRMC/CDRRMO orders.
+    Never change medication doses or suggest substitutions. Follow Daddy Grampy's clinician instructions for kidney hydration (never prescribe fluid volumes).
+    Keep Jules's insulin strictly within labeled storage conditions and verify outage cooling contingencies with a pharmacist/clinician.
+    Unverified stock or prices are marked "NEEDS VERIFICATION" — never assumed physically inspected.
+  </div>
+
+  <div class="helper-banner" role="status">
+    🔒 HELPER / FAMILY READ-ONLY MODE ACTIVE: Checklists and emergency guides can be viewed and ticked off safely. Inventory deletion, price edits, and medication deletions are locked. Tap "Role: Helper Read-Only" below to return to Admin Mode.
+  </div>
+
+  <div class="top-controls" role="region" aria-label="Accessibility, Role, Location, and Backup Controls">
+    <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+      <label for="locationFilter" style="font-weight:700;">Location:</label>
+      <select id="locationFilter" onchange="setLocationFilter(this.value)" style="width:auto;">
+        <option value="ALL">All 3 Locations (Consolidated Molo Base)</option>
+        <option value="MOLO">Molo Home Base (Zone 4, South Fundidor)</option>
+        <option value="JARO">Jaro (Alta Tierra — Daddy Grampy)</option>
+        <option value="GUIMARAS">Guimaras (Brgy. Pina, Buenavista — Mommy Den &amp; Daddy Danny)</option>
+      </select>
+      <button type="button" onclick="toggleRoleMode()" id="btnRoleMode" class="btn-primary">🔑 Role: Admin (Full Edit)</button>
+    </div>
+    <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+      <button type="button" onclick="toggleHighContrast()" aria-pressed="false" id="btnContrast">👁️ High Contrast</button>
+      <button type="button" onclick="toggleLargeText()" aria-pressed="false" id="btnTextSize">🔠 Larger Text</button>
+      <button type="button" onclick="window.print()">🖨️ Print</button>
+      <button type="button" onclick="exportBackup()" class="admin-only">💾 Export (.json)</button>
+      <label class="btn admin-only" style="margin:0;">
+        📂 Import
+        <input type="file" accept=".json" style="display:none;" onchange="importBackup(event)">
+      </label>
+    </div>
+  </div>
+
+  <!-- PERSISTENT 7-DAY OFF-GRID AUTONOMY & READINESS SCORE BAR -->
+  <section style="max-width:1220px; margin:0.75rem auto 0 auto; padding:0 1rem;" aria-label="7-Day Off-Grid Independence Targets">
+    <div class="card" style="margin-bottom:0.5rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.5rem;">
+        <h2 style="margin:0; font-size:1.15rem;">Molo Home Base: 7-Day Off-Grid Autonomy &amp; Verification Score (10 People + Zoe)</h2>
+        <span class="badge badge-warn">Target: 7 Days Independence | Meds/Candy: 14–30 Days | Insulin Cold-Chain: 72+ Hrs</span>
+      </div>
+      <div id="autonomyDashboard" class="grid-5"></div>
+    </div>
+  </section>
+
+  <nav class="tabs" role="tablist" aria-label="Hub Sections">
+    <button role="tab" aria-selected="true" onclick="switchTab('tab-alerts', this)">1. Situation Room &amp; Hazards</button>
+    <button role="tab" aria-selected="false" onclick="switchTab('tab-inventory', this)">2. Starter Buying &amp; 9-Cat Inventory</button>
+    <button role="tab" aria-selected="false" onclick="switchTab('tab-monthly', this)">3. Monthly Audit &amp; Report</button>
+    <button role="tab" aria-selected="false" onclick="switchTab('tab-members', this)">4. Member Prep &amp; Meds</button>
+    <button role="tab" aria-selected="false" onclick="switchTab('tab-evac', this)">5. Evacuation &amp; Contacts</button>
+  </nav>
+
+  <main>
+    <!-- TAB 1: SITUATION ROOM & 1-TAP HAZARD PLAYBOOKS -->
+    <section id="tab-alerts" class="tab-panel active" role="tabpanel">
+      <div class="card">
+        <h2 style="margin-top:0;">⚡ 1-Tap Hazard-Triggered Household Action Lists</h2>
+        <p style="margin:0.4rem 0;">Select an active hazard scenario below to pull up immediate assignments for You, Jules, Mica, Mau, and the seniors across Molo, Jaro, and Guimaras.</p>
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin:0.75rem 0;">
+          <button type="button" id="hazBtn_HEAT" onclick="selectHazard('HEAT')">☀️ Extreme Heat / El Niño (≥42°C)</button>
+          <button type="button" id="hazBtn_BROWNOUT" onclick="selectHazard('BROWNOUT')">🔌 Extended MORE Power / GUIMELCO Outage</button>
+          <button type="button" id="hazBtn_TYPHOON" onclick="selectHazard('TYPHOON')">🌀 Typhoon / Guimaras Ferry Cutoff</button>
+          <button type="button" id="hazBtn_QUAKE" onclick="selectHazard('QUAKE')">🫨 Earthquake / Tsunami Drill</button>
+        </div>
+        <div id="hazardPlaybookContainer"></div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+          <h2 style="margin:0;">Live Weather, PAGASA Heat Index &amp; Seismic Monitor</h2>
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+            <button class="btn-primary" onclick="fetchAllLiveFeeds()">🔄 Refresh Live Weather &amp; Quakes</button>
+            <button onclick="copySituationSummary()">📋 Copy Alert Summary for Family Chat</button>
+          </div>
+        </div>
+        <p style="margin:0.5rem 0;">
+          <strong>Feed Status:</strong> Live hourly temperature, humidity, and 3-day forecast via keyless <code>Open-Meteo API</code>; Heat Index computed with NOAA/PAGASA classification (always shown with <strong>Text + Symbol + Border</strong>, never color alone). Earthquakes within 300km pulled via keyless <code>USGS API</code>.
+        </p>
+        <div id="weatherLastUpdated" class="badge badge-warn">Weather Feed: Not fetched in this session — tap Refresh</div>
+        <div id="weatherCards" class="grid-3" style="margin-top:1rem;"></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin-top:0;">Official Philippine Agency &amp; Electricity Portals</h3>
+          <p style="font-size:0.95rem;">Use these direct 1-tap links for official advisories and log active feeder brownouts or storm signals in the Offline Bulletin Board.</p>
+          <ul>
+            <li><strong>Iloilo City CDRRMO (Preferred Local Source):</strong> <a href="https://cdrrmo.iloilocity.gov.ph" target="_blank" rel="noopener">cdrrmo.iloilocity.gov.ph</a></li>
+            <li><strong>PAGASA Weather, Heat Index &amp; El Niño:</strong> <a href="https://bagong.pagasa.dost.gov.ph" target="_blank" rel="noopener">bagong.pagasa.dost.gov.ph</a></li>
+            <li><strong>PHIVOLCS Earthquake &amp; Tsunami Bulletins:</strong> <a href="https://www.phivolcs.dost.gov.ph" target="_blank" rel="noopener">phivolcs.dost.gov.ph</a></li>
+            <li><strong>Molo &amp; Jaro Electricity — MORE Power (Iloilo City):</strong> <a href="https://morepower.ph" target="_blank" rel="noopener">morepower.ph (Outage Advisories)</a></li>
+            <li><strong>Guimaras Electricity — GUIMELCO (Buenavista):</strong> Check official <em>Guimaras Electric Cooperative (GUIMELCO)</em> advisory page or local hotline.</li>
+            <li><strong>Guimaras Ferry / Sea Travel (PCG Iloilo):</strong> Verify Jordan/Buenavista – Iloilo City boats immediately if a Tropical Cyclone Wind Signal (TCWS) is forecasted.</li>
+          </ul>
+
+          <h4>Recent Earthquakes Within 300km of Iloilo/Guimaras (USGS Live Feed)</h4>
+          <div id="quakeStatus" class="badge badge-warn">Not checked yet</div>
+          <ul id="quakeList" style="margin-top:0.5rem;">
+            <li>Tap "Refresh Live Weather &amp; Quakes" above to check recent seismic activity.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-top:0;">Offline Bulletin &amp; Power Outage Logbook (Saved Locally)</h3>
+          <p style="font-size:0.95rem;">Record current CDRRMO alerts, TCWS signals, or MORE Power / GUIMELCO scheduled brownouts here so they stay readable offline.</p>
+          <div style="display:grid; gap:0.5rem;">
+            <label><strong>Active Typhoon / Weather / El Niño Alert:</strong>
+              <input type="text" id="logWeatherAlert" placeholder="e.g., No active TCWS; Extreme Caution Heat Index 39°C">
+            </label>
+            <label><strong>Molo &amp; Jaro (MORE Power) Status:</strong>
+              <input type="text" id="logMorePower" placeholder="e.g., Normal power / Scheduled maintenance Saturday 8AM-5PM">
+            </label>
+            <label><strong>Guimaras (GUIMELCO &amp; Ferry Crossing) Status:</strong>
+              <input type="text" id="logGuimelco" placeholder="e.g., Normal power; Buenavista-Iloilo boats operating normally">
+            </label>
+            <button class="btn-primary" onclick="saveBulletinLog()">💾 Save Advisory Log Offline</button>
+            <div id="bulletinSavedStamp" class="badge badge-warn">Last manually verified: Never</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: 3-WAVE STARTER CHECKLIST + 9-CATEGORY INVENTORY & DTI SRP -->
+    <section id="tab-inventory" class="tab-panel" role="tabpanel">
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+          <h2 style="margin:0;">🛒 Iloilo 3-Wave Initial Buying Checklist (Starting From Scratch)</h2>
+          <span id="starterProgressBadge" class="badge badge-warn">0 / 15 Starter Runs Completed</span>
+        </div>
+        <p style="margin:0.4rem 0;">
+          Built for local Iloilo City stores (<strong>Mercury Drug, Molo Water Refilling Station, Iloilo Supermart/SM, Pet Express, and Wilcon Depot Jaro</strong>). Tick off items as you buy them, then record the exact counted stock and receipt price in the 9-Category Inventory below.
+        </p>
+        <div id="starterWavesContainer" class="grid-3"></div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+          <h2 style="margin:0;">9-Category Off-Grid Inventory &amp; DTI SRP Manager (7-Day Molo Target)</h2>
+          <button class="btn-primary no-print admin-only" onclick="openAddInventoryModal()">➕ Add Supply Item</button>
+        </div>
+        <p style="margin:0.5rem 0;">
+          <strong>Pricing &amp; Verification Rule:</strong> Every item defaults to <code>Needs Verification</code> with quantity <code>0</code> until physically counted. BNPC items use editable <strong>DTI SRP Bulletin</strong> figures; medications, pet items, sanitation gear, and off-grid hardware are marked <strong>Estimate, verify at store</strong>.
+        </p>
+        <div style="display:flex; gap:1rem; flex-wrap:wrap; align-items:center; margin-top:0.5rem;">
+          <label style="width:auto; display:flex; align-items:center; gap:0.5rem;" class="admin-only">
+            <strong>DTI SRP Bulletin Date Verified:</strong>
+            <input type="date" id="dtiLastUpdatedDate" onchange="updateDtiDate(this.value)" style="width:auto;">
+          </label>
+          <span id="dtiDateBadge" class="badge badge-warn">DTI SRP Date: Needs Verification</span>
+        </div>
+      </div>
+
+      <!-- Add/Edit Inventory Modal Card -->
+      <div id="invFormCard" class="card no-print admin-only" style="display:none;">
+        <h3 id="invFormTitle" style="margin-top:0;">Add / Update Inventory Item</h3>
+        <input type="hidden" id="invEditId">
+        <div class="grid-3">
+          <label>Category (01 to 09):
+            <select id="invCategory">
+              <option value="01. Drinking Water & Hydration">01. Drinking Water &amp; Hydration</option>
+              <option value="02. Utility Water & Storage Hardware">02. Utility Water &amp; Storage Hardware</option>
+              <option value="03. Off-Grid Sanitation & Waste">03. Off-Grid Sanitation &amp; Waste</option>
+              <option value="04. Pantry, Toddler (Eli) & Ready-to-Eat Food">04. Pantry, Toddler (Eli) &amp; Ready-to-Eat Food</option>
+              <option value="05. Medications, Candy & Clinical Consumables">05. Medications, Candy &amp; Clinical Consumables</option>
+              <option value="06. Insulin Cold-Chain & Off-Grid Power">06. Insulin Cold-Chain &amp; Off-Grid Power</option>
+              <option value="07. Lighting & Off-Grid Communications">07. Lighting &amp; Off-Grid Communications</option>
+              <option value="08. Accessible Evacuation & Blindness Aids (Mommy Den)">08. Accessible Evacuation &amp; Blindness Aids (Mommy Den)</option>
+              <option value="09. Pet Preparedness (Zoe - Shih Poo)">09. Pet Preparedness (Zoe - Shih Poo)</option>
+            </select>
+          </label>
+          <label>Item Name &amp; Unit Size:
+            <input type="text" id="invName" placeholder="e.g., Sealed 5-Gallon (18.9L) Drinking Water Jug">
+          </label>
+          <label>Priority Tier:
+            <select id="invPriority">
+              <option value="P1 - Life & Medical">P1 - Life &amp; Medical</option>
+              <option value="P2 - Water, Food & Sanitation">P2 - Water, Food &amp; Sanitation</option>
+              <option value="P3 - Off-Grid Hardware & Gear">P3 - Off-Grid Hardware &amp; Gear</option>
+            </select>
+          </label>
+          <label>Physical Storage Zone:
+            <select id="invZone">
+              <option value="Molo Water Station">Molo Water Station</option>
+              <option value="Molo Pantry">Molo Pantry</option>
+              <option value="Molo Kitchen / Fridge">Molo Kitchen / Fridge</option>
+              <option value="Molo Medical & Cold-Chain Cabinet">Molo Medical &amp; Cold-Chain Cabinet</option>
+              <option value="Molo Master Grab-Bag">Molo Master Grab-Bag</option>
+              <option value="Molo Sanitation / Utility Closet">Molo Sanitation / Utility Closet</option>
+              <option value="Guimaras
