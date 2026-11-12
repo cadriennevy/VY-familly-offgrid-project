@@ -1,0 +1,59 @@
+const CACHE_NAME = 'molo-family-hub-cache-v2-1';
+const CORE_ASSETS = [
+  './',
+  './index.html',
+  './manifest.json'
+];
+
+// Install: Cache core app files immediately
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS))
+  );
+  self.skipWaiting();
+});
+
+// Activate: Clean up outdated caches when you upgrade versions
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(
+        keys
+          .filter((key) => key !== CACHE_NAME)
+          .map((key) => caches.delete(key))
+      )
+    )
+  );
+  self.clients.claim();
+});
+
+// Fetch: Network-first for live weather/quake APIs, Cache-first for the app shell
+self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+
+  // Bypass cache for live Open-Meteo & USGS API calls so offline errors trigger gracefully
+  if (url.hostname.includes('open-meteo.com') || url.hostname.includes('usgs.gov')) {
+    event.respondWith(
+      fetch(event.request).catch(() => new Response('{"offline":true}', {
+        headers: { 'Content-Type': 'application/json' }
+      }))
+    );
+    return;
+  }
+
+  // Cache-first strategy for the hub UI so it opens instantly without signal
+  event.respondWith(
+    caches.match(event.request).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+      return fetch(event.request).then((networkResponse) => {
+        if (event.request.method === 'GET' && networkResponse.status === 200) {
+          const clone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return networkResponse;
+      });
+    })
+  );
+});
